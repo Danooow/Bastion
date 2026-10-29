@@ -499,7 +499,7 @@ function executeSandboxCommand(text){if(!sandboxMode||state!=='console')return;
  const match=/^\/(godmode|maxammo|skipgolf)(?:\s+(off))?$/i.exec(text.trim());
  if(!match){commandMessage('Onbekend commando. Gebruik /godmode, /maxammo of /skipgolf, eventueel met off.');return}
  const name=match[1].toLowerCase(),enabled=!match[2];cheats[name]=enabled;
- if(name==='godmode'){hurtSlow=0;vy=0;if(enabled){php=100;hp=100;grd=false}else{px=Math.max(-70,Math.min(44,px));pz=Math.max(-105,Math.min(9,pz));if(playerBlocked(px,pz)){px=0;pz=0}py=Math.max(py,gh(px,pz));grd=false}}
+ if(name==='godmode'){hurtSlow=0;vy=0;if(enabled){php=100;hp=100;shake=0;flv=0;cG.position.x=0;$('flash').style.opacity=0;grd=false}else{px=Math.max(-70,Math.min(44,px));pz=Math.max(-105,Math.min(9,pz));if(playerBlocked(px,pz)){px=0;pz=0}py=Math.max(py,gh(px,pz));grd=false}}
  if(name==='maxammo'){reloading=0;if(enabled){ammo=st().mag;for(const k of ORD)if(owned[k])ammoBy[k]=Math.max(1,Math.round((8+2*lv.mag)*W[k].mag))}}
  if(name==='skipgolf'&&enabled)skipRemainingWave();
  commandMessage('/'+name+': '+(enabled?'AAN':'UIT')+(name==='skipgolf'&&!enabled?' · verslagen vijanden blijven dood':''));
@@ -517,6 +517,7 @@ const STAMINA_MAX=100,STAMINA_DRAIN=20,STAMINA_REGEN=12.5;
 let stamina=STAMINA_MAX,sprintExhausted=false,sprinting=false,sprintBlend=0,sprintPhase=0,hurtSlow=0;
 function resetMovement(){stamina=STAMINA_MAX;sprintExhausted=false;sprinting=false;sprintBlend=0;sprintPhase=0;hurtSlow=0;updateStaminaHud()}
 function updateStaminaHud(){$('staminaBar').style.width=stamina+'%';$('staminaBar').style.background=sprintExhausted?'#db9346':'#42c9ae';$('staminaText').textContent=Math.ceil(stamina)+'%'+(sprintExhausted?' · herstellen':sprinting?' · sprint':'')}
+function damageFeedback(strength,castleOffset=0,keepShake=false){if(isGod())return;SFX.castle();shake=keepShake?Math.max(shake,strength):strength;flv=1;if(castleOffset)cG.position.x=castleOffset}
 function damageCastle(amount){if(isGod())return;hp=Math.max(0,hp-amount)}
 function damagePlayer(amount){if(isGod())return;php=Math.max(0,php-amount);if(pGnd()&&!onWall())hurtSlow=3}
 function movementSpeed(dt,moving,locked){
@@ -594,7 +595,7 @@ function makeDragon(){const g=new THREE.Group(),rd=mk(0xd01c16),dr=mk(0x7a0a08),
  const wl=mkW(1),wr=mkW(-1),tr=new THREE.Mesh(gTri,triR);tr.position.y=3;tr.scale.setScalar(2);tr.userData.tri=1;g.add(tr);g.scale.setScalar(2.6);g.traverse(o=>o.userData.root=g);return{g,prop:{rotation:{z:0}},wl,wr}}
 function spawnPlane(){const m=1+.15*(wave-1),o=wave>=25?makeDragon():makePlane(),e={o,g:o.g,fly:true,giant:false,dr:0,hp:(wave>=25?450:60)*m,sp:26+R()*6,dmg:20,state:'walk',t:R()*6};o.g.position.set((R()<.5?-1:1)*(14+R()*10),70,-165);o.g.userData.e=e;scene.add(o.g);E.push(e);tone(150,1.2,'sawtooth',.06)}
 function flyUpdate(e,dt){const g=e.g;g.position.z+=e.sp*dt;g.position.y=24+Math.max(0,Math.min(1,(-60-g.position.z)/105))*46+Math.sin(e.t*1.5)*1.2;if(e.o.wl){const w=Math.sin(e.t*6)*.6;e.o.wl.rotation.z=w;e.o.wr.rotation.z=-w}else e.o.prop.rotation.z+=dt*50;const dg=!!e.o.wl;if(e.dr<(dg?3:1)&&g.position.z>(dg?-60:-30)+e.dr*20){e.dr++;const m=new THREE.Mesh(gS,dg?new THREE.MeshBasicMaterial({color:0xff6a10}):mk(0x222222));m.scale.set(dg?1:.5,dg?1:.5,dg?1.6:.9);m.position.copy(g.position);scene.add(m);B.push({m,vy:0,vz:e.sp,dmg:dg?30:20});if(dg)tone(120,.5,'sawtooth',.15,-60)}if(g.position.z>150){e.state='dead';e.dt=7}}
-function updBombs(dt,s){for(let i=B.length-1;i>=0;i--){const b=B[i];b.vy-=20*dt;b.m.position.y+=b.vy*dt;b.m.position.z+=b.vz*dt;if(b.m.position.y<=.5){blood(b.m.position,34,2,fm);if(!shOn){damageCastle((b.dmg||20)*s.arm);SFX.castle();shake=.8;flv=1}else SFX.hit();scene.remove(b.m);B.splice(i,1)}}}
+function updBombs(dt,s){for(let i=B.length-1;i>=0;i--){const b=B[i];b.vy-=20*dt;b.m.position.y+=b.vy*dt;b.m.position.z+=b.vz*dt;if(b.m.position.y<=.5){blood(b.m.position,34,2,fm);if(!shOn){damageCastle((b.dmg||20)*s.arm);damageFeedback(.8)}else SFX.hit();scene.remove(b.m);B.splice(i,1)}}}
 
 // obstakels: lage dingen springt men over, hoge dingen loopt men omheen
 function bumpY(p,step){let y=0;for(const o of OBS){if(o.h>step)continue;const d=Math.hypot(o.x-p.x,o.z-p.z),r=o.r+.9;if(d<r){const k=Math.cos(d/r*1.5708);y=Math.max(y,(o.h*.9+.3)*k*k)}}return y}
@@ -603,7 +604,7 @@ function chasePl(e,dt){if(!pGnd()||e.fly)return false;const g=e.g,o=e.o,dx=px-g.
  const gs=e.giant?1.6:e.horse?1.1:.85,stp=rg?13:e.giant?2.8:e.horse?2.6:1.9;
  if(d>stp){const hd=walkTo(g.position,px,pz,e.sp*(e.fast?1.2:1),dt,e.giant?1.6:e.horse?.9:.5,gs);g.rotation.y+=(((hd-g.rotation.y+9.4248)%6.2832)-3.1416)*Math.min(1,dt*8);g.position.y=bumpY(g.position,gs);gait(o,e.t,e.sp*2.6);return true}
  g.rotation.y+=(((Math.atan2(dx,dz)-g.rotation.y+9.4248)%6.2832)-3.1416)*Math.min(1,dt*10);g.position.y=bumpY(g.position,gs);o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(e.t*7)*1.1;o.aL.rotation.x=-.4;
- e.pa=(e.pa===undefined?.4:e.pa)-dt;if(e.pa<=0){e.pa=rg?(e.rt||2):e.giant?1.6:1.1;damagePlayer((e.dmg||15)*(e.boss?.5:.55));flv=1;shake=Math.max(shake,.35);SFX.castle();if(rg)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(px,cyv+1.2,pz),0xffee88)}
+ e.pa=(e.pa===undefined?.4:e.pa)-dt;if(e.pa<=0){e.pa=rg?(e.rt||2):e.giant?1.6:1.1;damagePlayer((e.dmg||15)*(e.boss?.5:.55));damageFeedback(.35,0,true);if(rg)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(px,cyv+1.2,pz),0xffee88)}
  return true}
 function walkTo(p,tx,tz,sp,dt,rad,step){let dx=tx-p.x,dz=tz-p.z;const d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;let ax=dx,az=dz;
  for(const o of OBS){if(o.h<=step)continue;const ox=o.x-p.x,oz=o.z-p.z,rr=o.r+rad;if(Math.abs(ox)>rr+5||Math.abs(oz)>rr+5)continue;
@@ -641,7 +642,7 @@ function spawnFireball(){const m=new THREE.Mesh(fireballGeo,fireballMat);m.posit
 function updVolcano(dt){if(wave<55)return;volcanoTimer-=dt;if(volcanoTimer<=0){spawnFireball();volcanoTimer=5+R()*3}
  for(const f of [...fireballs]){const step=Math.min(dt,f.duration-f.t);f.m.position.addScaledVector(f.v,step);f.m.position.y-=.5*f.gravity*step*step;f.v.y-=f.gravity*step;f.t+=step;
  if(shOn){const p=f.m.position;if(Math.pow((p.x-SHC.x)/SHR.x,2)+Math.pow(p.y/SHR.y,2)+Math.pow((p.z-SHC.z)/SHR.z,2)<1){blood(p,18,1,fm);removeFireball(f);continue}}
- if(f.t>=f.duration){blood(f.m.position,30,2,fm);if(!shOn){damageCastle(15*st().arm);shake=.7;flv=1;SFX.castle()}removeFireball(f)}}}
+ if(f.t>=f.duration){blood(f.m.position,30,2,fm);if(!shOn){damageCastle(15*st().arm);damageFeedback(.7)}removeFireball(f)}}}
 
 function shoot(){const s=st();if(!infiniteAmmo())ammo--;cd=s.int;kick=.14;fl=.05;SFX.shot();const w=W[cur];for(let i=0;i<w.pel;i++){ray.setFromCamera({x:(R()-.5)*w.spr*(1-.6*ads),y:(R()-.5)*w.spr*(1-.6*ads)},cam);
  const h=ray.intersectObjects(E.filter(e=>e.state!='dead').map(e=>e.g).concat(fireballs.map(f=>f.m)),true)[0];
@@ -1063,7 +1064,7 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'){last=now;
    if(e.state=='dead'){e.dt+=dt;if(e.fly){g.position.y-=dt*28;g.rotation.z+=dt*5}else g.rotation.x=-Math.min(e.dt*3,1)*1.5;continue}
    e.t+=dt;const o=e.o;if(e.fly){flyUpdate(e,dt);continue}if(e.leap){leapUpd(e,dt);continue}if(chasePl(e,dt))continue;const ft=foe(e);if(ft){g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);fightAlly(e,ft,dt);continue}
    if(g.position.z<e.stop){if(e.lx===undefined)e.lx=g.position.x;const hd=walkTo(g.position,e.lx,e.stop+8,e.sp,dt,e.giant?1.6:e.horse?.9:.5,e.giant?1.6:e.horse?1.1:.85),dh=((hd-g.rotation.y+9.4248)%6.2832)-3.1416;g.rotation.y+=dh*Math.min(1,dt*8);g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);gait(o,e.t,e.sp*2.6)}
-   else{g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);o.lL.rotation.x=o.lR.rotation.x=0;const sw=Math.sin(e.t*6);o.aR.rotation.x=-1.6-sw*1.1;o.aL.rotation.x=-.4;e.atk-=dt;if(e.atk<=0&&shOn){e.atk=1.2;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,SHC.z-SHR.z*.9),0x66ddff)}else if(e.atk<=0){e.atk=e.rng?e.rt:e.giant?1.8:1.3;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,14),0xffee88);damageCastle(e.dmg*s.arm);SFX.castle();if(e.boss){shake=1.1;flv=1;cG.position.x=.3;blood(new THREE.Vector3(g.position.x,7,g.position.z+3),24,1.6)}else{e.state='dead';e.dt=0;hideTri(g);e.g.position.y=.15*e.g.scale.x;blood(new THREE.Vector3(g.position.x,1.4,g.position.z),e.giant?30:16,1.2);decal(g.position.x,g.position.z-.8,e.giant?3:1.3);shake=.5;flv=1;cG.position.x=.15}}}}
+   else{g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);o.lL.rotation.x=o.lR.rotation.x=0;const sw=Math.sin(e.t*6);o.aR.rotation.x=-1.6-sw*1.1;o.aL.rotation.x=-.4;e.atk-=dt;if(e.atk<=0&&shOn){e.atk=1.2;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,SHC.z-SHR.z*.9),0x66ddff)}else if(e.atk<=0){e.atk=e.rng?e.rt:e.giant?1.8:1.3;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,14),0xffee88);damageCastle(e.dmg*s.arm);if(e.boss){damageFeedback(1.1,.3);blood(new THREE.Vector3(g.position.x,7,g.position.z+3),24,1.6)}else{e.state='dead';e.dt=0;hideTri(g);e.g.position.y=.15*e.g.scale.x;blood(new THREE.Vector3(g.position.x,1.4,g.position.z),e.giant?30:16,1.2);decal(g.position.x,g.position.z-.8,e.giant?3:1.3);damageFeedback(.5,.15)}}}}
   if(shOn)for(const e of E)if(e.state!='dead'&&!e.fly&&!e.leap)pushOut(e.g.position);
   for(let i=E.length-1;i>=0;i--)if(E[i].state=='dead'&&E[i].dt>6){scene.remove(E[i].g);E.splice(i,1)}
   updVolcano(dt);updAllies(dt);updBombs(dt,s);updShield(dt);updG(dt);updStreak(dt);
