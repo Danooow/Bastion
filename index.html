@@ -122,7 +122,14 @@ const wall=part(gB,stone,0,3,0,70,6,3,scene);wall.receiveShadow=true;
 // Low wooden front railing keeps the view over the field open.
 {const wood=mk(0x68452b);for(let x=-34;x<=34;x+=2)part(gB,wood,x,6.35,-1.3,.12,.7,.12,scene);for(const y of[6.2,6.6])part(gB,wood,0,y,-1.3,70,.1,.1,scene);
 // Raised rear firing ledge, separated from the player's walkway.
-part(gB,stone,0,6.7,1.25,70,1.4,.85,scene);}
+part(gB,stone,0,6.7,1.4,70,1.4,1.15,scene);
+const deck=new THREE.Group();deck.name='rearArcherWalkway';scene.add(deck);
+const plank=mk(0x805637),endgrain=mk(0x4b301f),iron=mk(0x34302b);
+for(let i=0;i<140;i++){const x=-34.75+i*.5;part(gB,i%3?wood:plank,x,7.43,1.4,.48,.06,1.12,deck);}
+for(const z of[.88,1.92]){for(let x=-34;x<=34;x+=2){part(gB,wood,x,7.79,z,.12,.72,.12,deck);part(gB,iron,x,7.5,z,.15,.05,.15,deck)}for(const y of[7.65,8.06])part(gB,wood,0,y,z,70,.1,.1,deck)}
+for(const x of[-34.6,34.6])for(const y of[7.65,8.06])part(gB,wood,x,y,1.4,.1,.1,1.12,deck);
+for(let x=-33;x<=33;x+=6){const brace=part(gB,endgrain,x,6.95,1.75,.16,.95,.14,deck);brace.rotation.x=-.45}
+}
 const cG=new THREE.Group();scene.add(cG);
 part(gB,mkS(0xa19e96),0,6,16,20,12,10,cG);part(gB,mk(0x3a2a1c),0,3,10.95,4,6,.3,cG);const wm=new THREE.MeshBasicMaterial({color:0xffc866});for(const x of[-7,-3.5,3.5,7])for(const y of[7,10])part(gB,wm,x,y,10.95,1,1.8,.1,cG);
 for(const x of[-12,12]){part(new THREE.CylinderGeometry(3,3.3,16,12),mkS(0xa8a59d),x,8,16,1,1,1,cG);part(new THREE.ConeGeometry(4,5,12),RFM,x,18.5,16,1,1,1,cG)}
@@ -226,7 +233,7 @@ const OBS=[];
 try{const lm=mkS(0xb9b6ae),dm=mkS(0x6a6761),wd=mk(0x5a3b22),ir=mk(0x25262a),iy=mk(0x3f6a2e),Pc=(g,m,x,y,z,a,b,c,p)=>part(g,m,x,y,z,a,b,c,p||cG),cy=(r1,r2,h)=>new THREE.CylinderGeometry(r1,r2,h,12);
  for(const x of[-10,10])for(let i=0;i<10;i++)Pc(gB,i%2?lm:dm,x,.6+i*1.2,10.97,i%2?1.5:1.1,.65,.6);
  for(let x=-34;x<=34;x+=2){part(gB,dm,x,5.55,-1.8,.8,.5,.55,scene);part(gB,dm,x,5.2,-1.75,.5,.3,.35,scene)}
- for(let i=-17;i<=17;i++)part(gB,lm,i*2,7.9,1.3,1.1,1,.5,scene);
+ // The raised firing walkway now has wooden rails instead of stone merlons.
  for(const x of[-12,12]){for(let i=0;i<16;i++){const a=i/16*6.283;Pc(gB,dm,x+Math.cos(a)*3.2,15.6,16+Math.sin(a)*3.2,.5,.7,.6).rotation.y=-a}Pc(cy(3.6,3.6,.3),lm,x,16.25,16)}
  for(const x of[-10.2,10.2]){Pc(cy(1.2,1.4,3.4),lm,x,13.7,11.8);Pc(new THREE.ConeGeometry(1.5,2.6,10),RFM,x,16.7,11.8);Pc(cy(1.4,.6,.9),dm,x,11.9,11.8);Pc(gB,ir,x,13.8,10.6,.12,.9,.05)}
  for(const x of[-3.5,3.5,-7,7])for(const y of[7,10]){for(const q of[-1,1])Pc(gB,wd,x+q*1.1,y,10.88,.5,1.8,.08);Pc(gB,ir,x,y,10.86,.06,1.8,.04);Pc(gB,ir,x,y,10.86,1,.06,.04)}
@@ -676,12 +683,13 @@ function walkTo(p,tx,tz,sp,dt,rad,step){
 }
 function foe(e){const g=e.g;let best=null,bd=e.rng?(e.stop<-60?55:32):3.2*(e.giant?1.6:1);for(const a of A){if(a.state=='dead'||a.tw)continue;if(!e.rng&&a.wall)continue;const d=Math.hypot(a.g.position.x-g.position.x,a.g.position.z-g.position.z)-(a.tower?3.3:0);if(d<bd){bd=d;best=a}}return best}
 function fightAlly(e,a,dt){const g=e.g,o=e.o,q=a.g.position;face(g,q.x,q.z);o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(e.t*6)*1.1;e.atk-=dt;if(e.atk<=0){e.atk=e.rng?e.rt:1.2;a.hp-=e.dmg;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(q.x,q.y+1.2,q.z),0xffaa88);blood(new THREE.Vector3(q.x,q.y+1.2,q.z),5);SFX.hit();if(a.hp<=0){a.state='dead';a.dt=0;hideTri(a.g)}}}
-function spawnAlly(k){const o=makeEnemy(false,k),h=k==3?150:k==2?100:60,g=o.g,wall=k==4;const a={o,g,kind:k,hp:h,max:h,wall,sp:k==3?8:4.5,dmg:k==3?18:20,cd:R(),t:R()*9,state:'idle',hx:(R()-.5)*40,hz:-8-R()*4};g.position.set(wall?(R()-.5)*44:a.hx,wall?7.4:0,wall?1.25:a.hz);g.rotation.y=Math.PI;scene.add(g);a.bh=h;a.bd=a.dmg;allyStat(a);A.push(a);SFX.coin()}
+function positionWallArchers(){const archers=A.filter(a=>a.wall&&!a.tw&&a.kind==4&&a.state!=='dead');archers.forEach((a,i)=>{a.wallAnchor={x:(i-(archers.length-1)/2)*7.6,y:7.46,z:1.4};a.g.position.set(a.wallAnchor.x,a.wallAnchor.y,a.wallAnchor.z)})}
+function spawnAlly(k){const o=makeEnemy(false,k),h=k==3?150:k==2?100:60,g=o.g,wall=k==4;const a={o,g,kind:k,hp:h,max:h,wall,sp:k==3?8:4.5,dmg:k==3?18:20,cd:R(),t:R()*9,state:'idle',hx:(R()-.5)*40,hz:-8-R()*4};g.position.set(wall?(R()-.5)*44:a.hx,wall?7.4:0,wall?1.25:a.hz);g.rotation.y=Math.PI;scene.add(g);a.bh=h;a.bd=a.dmg;allyStat(a);A.push(a);if(wall)positionWallArchers();SFX.coin()}
 function updAllies(dt){for(let i=A.length-1;i>=0;i--){const a=A[i],g=a.g,o=a.o,p=g.position;if(a.state=='dead'){a.dt+=dt;g.rotation.x=-Math.min(a.dt*3,1)*1.5;if(a.dt>4){scene.remove(g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}A.splice(i,1)}continue}
  if(a.host&&a.host.state=='dead'){a.state='dead';a.dt=3.5;hideTri(g);continue}if(a.tower)continue;
  a.t+=dt;a.cd-=dt;let tg=null,bd=a.tw?75:a.wall?40:60;
  for(const e of E){if(e.state=='dead'||(e.fly&&!a.wall))continue;const d=Math.hypot(e.g.position.x-p.x,e.g.position.z-p.z);if(d<bd&&(a.wall||e.g.position.z>-70)){bd=d;tg=e}}
- if(a.wall){if(tg){const q=tg.g.position;face(g,q.x,q.z);o.aR.rotation.x=-1.4;if(a.cd<=0){a.cd=a.cdr||1;tracer(new THREE.Vector3(p.x,p.y+1.5,p.z),new THREE.Vector3(q.x,tg.fly?q.y:1.4,q.z),0xffe9a0);tg.hp-=a.dmg;if(tg.fly)blood(q.clone(),5,1,fm);else blood(new THREE.Vector3(q.x,1.4,q.z),6);noise(.12,.18,2200);if(tg.hp<=0)kill(tg,false)}}else{g.rotation.y=Math.PI;o.aR.rotation.x=-.3}continue}
+ if(a.wall){if(a.wallAnchor)p.set(a.wallAnchor.x,a.wallAnchor.y,a.wallAnchor.z);if(tg){const q=tg.g.position;face(g,q.x,q.z);o.aR.rotation.x=-1.4;if(a.cd<=0){a.cd=a.cdr||1;tracer(new THREE.Vector3(p.x,p.y+1.5,p.z),new THREE.Vector3(q.x,tg.fly?q.y:1.4,q.z),0xffe9a0);tg.hp-=a.dmg;if(tg.fly)blood(q.clone(),5,1,fm);else blood(new THREE.Vector3(q.x,1.4,q.z),6);noise(.12,.18,2200);if(tg.hp<=0)kill(tg,false)}}else{g.rotation.y=Math.PI;o.aR.rotation.x=-.3}continue}
  if(tg){const q=tg.g.position,dx=q.x-p.x,dz=q.z-p.z,d=Math.hypot(dx,dz);face(g,q.x,q.z);if(d>2.2*(tg.giant?1.8:1)){g.rotation.y=walkTo(p,q.x,q.z,a.sp,dt,.5,stp(a));p.y=bumpY(p,stp(a));gait(o,a.t,a.sp*2.6)}else{p.y=bumpY(p,stp(a));o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(a.t*7)*1.1;if(a.cd<=0){a.cd=.8;tg.hp-=a.dmg;blood(new THREE.Vector3(q.x,1.4,q.z),6);SFX.hit();if(tg.hp<=0)kill(tg,false)}}}
  else{const dx=a.hx-p.x,dz=a.hz-p.z,d=Math.hypot(dx,dz);if(d>1){g.rotation.y=walkTo(p,a.hx,a.hz,a.sp,dt,.5,stp(a));p.y=bumpY(p,stp(a));gait(o,a.t,a.sp*2.6)}else{p.y=bumpY(p,stp(a));g.rotation.y=Math.PI;o.lL.rotation.x=o.lR.rotation.x=0}}}}
 // munitie: 'ammo' = kogels in het magazijn van het huidige wapen, rsv[k] = reserve per wapen, ammoBy[k] = magazijn van de andere wapens
