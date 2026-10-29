@@ -362,7 +362,7 @@ function updSky(dt){tod=(tod+dt*(tod<.5?.5/240:.5/120))%1;let i=0;while(KF[i+1][
 // wapen
 const gun=new THREE.Group();
 const flashM=part(gS,new THREE.MeshBasicMaterial({color:0xffcc55}),0,0,-.45,.12,.12,.12,gun);flashM.visible=false;gun.position.set(.28,-.26,-.6);cam.add(gun);
-const W={pistol:{n:'Pistool',d:'Betrouwbaar en snel te herladen',price:0,dm:1,int:1,rel:1,mag:1,pel:1,spr:0,col:0x222222,len:.7},smg:{n:'SMG',d:'Zeer hoge vuursnelheid, lage schade per kogel',price:250,dm:.4,int:.3,rel:1.1,mag:3,pel:1,spr:.01,col:0x2a2d33,len:.8},shotgun:{n:'Jachtgeweer',d:'7 kogels per schot, dodelijk van dichtbij',price:400,dm:.55,int:1.7,rel:1.3,mag:.5,pel:7,spr:.09,col:0x3a3a3a,len:.95},sniper:{n:'Scherpschuttersgeweer',d:'Enorme schade, langzame schoten',price:700,dm:4.5,int:2.2,rel:1.2,mag:.5,pel:1,spr:0,col:0x1c2a1c,len:1.15},ak:{n:'AK-47',d:'Snel en krachtig, 30 kogels',price:900,dm:.9,int:.2,rel:1.2,mag:3.75,pel:1,spr:.015,col:0x3a2a1a,len:1},minigun:{n:'Minigun',d:'Zwaarder dan de AK-47: meer schade per kogel en sneller · 150 kogels · herladen duurt 5 seconden',price:2000,dm:1,int:.16,rel:2.2727,mag:18.75,pel:1,spr:.03,col:0x2a2d33,len:1.2}};
+const W={pistol:{n:'M1911',d:'Betrouwbaar en snel te herladen',price:0,dm:1,int:1,rel:1,mag:1,pel:1,spr:0,col:0x222222,len:.7},smg:{n:'MP5',d:'Zeer hoge vuursnelheid, lage schade per kogel',price:250,dm:.4,int:.3,rel:1.1,mag:3,pel:1,spr:.01,col:0x2a2d33,len:.8},shotgun:{n:'Remington 870',d:'7 kogels per schot, dodelijk van dichtbij',price:400,dm:.55,int:1.7,rel:1.3,mag:.5,pel:7,spr:.09,col:0x3a3a3a,len:.95},sniper:{n:'Barrett M82',d:'Enorme schade, langzame schoten',price:700,dm:4.5,int:2.2,rel:1.2,mag:.5,pel:1,spr:0,col:0x1c2a1c,len:1.15},ak:{n:'AK-47',d:'Snel en krachtig, 30 kogels',price:900,dm:.9,int:.2,rel:1.2,mag:3.75,pel:1,spr:.015,col:0x3a2a1a,len:1},minigun:{n:'M134 Minigun',d:'Zwaarder dan de AK-47: meer schade per kogel en sneller · 150 kogels · herladen duurt 5 seconden',price:2000,dm:1,int:.16,rel:2.2727,mag:18.75,pel:1,spr:.03,col:0x2a2d33,len:1.2}};
 let cur='pistol';const owned={pistol:1};const wup={},upg={on:0,t:0,k:null,phase:0,charge:0,applied:0};const wmul=k=>1+(wup[k]||0);const UCOL=[0xffd870,0x123b85,0x8b32ce,0xc9252d],UCOST=[8000,12000,20000];
 const S=(c,m,r)=>new THREE.MeshStandardMaterial({color:c,metalness:m,roughness:r});
 const fill=new THREE.PointLight(0xb8c4ff,.45,4);fill.position.set(.2,.2,-.3);cam.add(fill);
@@ -695,14 +695,14 @@ function updAllies(dt){for(let i=A.length-1;i>=0;i--){const a=A[i],g=a.g,o=a.o,p
  if(tg){const q=tg.g.position,dx=q.x-p.x,dz=q.z-p.z,d=Math.hypot(dx,dz);face(g,q.x,q.z);if(d>2.2*(tg.giant?1.8:1)){g.rotation.y=walkTo(p,q.x,q.z,a.sp,dt,.5,stp(a));p.y=bumpY(p,stp(a));gait(o,a.t,a.sp*2.6)}else{p.y=bumpY(p,stp(a));o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(a.t*7)*1.1;if(a.cd<=0){a.cd=.8;tg.hp-=a.dmg;blood(new THREE.Vector3(q.x,1.4,q.z),6);SFX.hit();if(tg.hp<=0)kill(tg,false)}}}
  else{const dx=a.hx-p.x,dz=a.hz-p.z,d=Math.hypot(dx,dz);if(d>1){g.rotation.y=walkTo(p,a.hx,a.hz,a.sp,dt,.5,stp(a));p.y=bumpY(p,stp(a));gait(o,a.t,a.sp*2.6)}else{p.y=bumpY(p,stp(a));g.rotation.y=Math.PI;o.lL.rotation.x=o.lR.rotation.x=0}}}}
 // munitie: 'ammo' = kogels in het magazijn van het huidige wapen, rsv[k] = reserve per wapen, ammoBy[k] = magazijn van de andere wapens
-const AMO={pistol:{n:'Pistool ammo',pk:8,mx:32,pr:15},smg:{n:'SMG ammo',pk:50,mx:240,pr:40},shotgun:{n:'Jachtgeweer ammo',pk:5,mx:35,pr:40},sniper:{n:'Sniper ammo',pk:4,mx:60,pr:60},ak:{n:'Rifle ammo (AK-47)',pk:30,mx:650,pr:70},minigun:{n:'Minigun ammo',pk:150,mx:600,pr:180}};
+const AMO={pistol:{n:'M1911 ammo',pk:8,mx:32,pr:15},smg:{n:'MP5 ammo',pk:50,mx:240,pr:40},shotgun:{n:'Remington 870 ammo',pk:5,mx:35,pr:40},sniper:{n:'Barrett M82 ammo',pk:4,mx:60,pr:60},ak:{n:'AK-47 ammo',pk:30,mx:650,pr:70},minigun:{n:'M134 Minigun ammo',pk:150,mx:600,pr:180}};
 function wstat(k){const w=W[k],d=Math.round(25*(1+.25*lv.dmg)*w.dm*wmul(k)),sp=1/(.42*Math.pow(.87,lv.rate)*w.int),mg=Math.max(1,Math.round((8+2*lv.mag)*w.mag)),rl=2.2*Math.pow(.87,lv.reload)*w.rel;return (wup[k]?'★'.repeat(wup[k])+' ':'')+'Schade '+d+(w.pel>1?' × '+w.pel+' kogels':'')+' · '+sp.toFixed(1)+' schoten/s · magazijn '+mg+' · herladen '+rl.toFixed(1)+' s · max. munitie '+AMO[k].mx*wmul(k)}
 let rsv={pistol:32};
 const magOf=k=>k==cur?ammo:(ammoBy[k]||0);
 function topUp(){if(infiniteAmmo()){ammo=st().mag;return}const t=Math.min(st().mag-ammo,rsv[cur]||0);if(t>0){ammo+=t;rsv[cur]-=t}}
 function initAmmo(){rsv={pistol:32};ammoBy={};ammo=st().mag}
 function noodAmmo(){const h=(rsv.pistol||0)+magOf('pistol');if(h<8)rsv.pistol=(rsv.pistol||0)+8-h}
-function reload(){if(infiniteAmmo())return;if(upg.on||reloading||ammo>=st().mag||!(rsv[cur]>0))return;reloading=st().rel;SFX.click()}
+function reload(){if(infiniteAmmo())return;if(upg.on||reloading||ammo>=st().mag||!(rsv[cur]>0))return;reloading=reloadDuration=st().rel;reloadMissing=Math.min(st().mag-ammo,rsv[cur]);SFX.click()}
 
 const fireballs=[],fireballGeo=new THREE.SphereGeometry(1.8,12,10),fireballMat=new THREE.MeshBasicMaterial({color:0xff6418});
 let volcanoTimer=4;
@@ -1084,6 +1084,60 @@ try{const _b5=buildGun;buildGun=function(k){_b5(k);if(k==='minigun')addMinigunSi
  for(const side of[-1,1])for(let i=0;i<L;i++){const o=part(gB,trim,side*(hw+.008),-.025,z1+(i+.5)/L*(z2-z1),.009,.025,Math.min(.1,Math.abs(z2-z1)/L*.5),gun);o.userData.upgradeTrim=true}
 };buildGun(cur)}catch(e){console.warn('skin',e)}
 
+// Weapon-specific moving parts. All transforms return to zero outside a reload.
+let reloadRig=null,reloadDuration=0,reloadMissing=0;
+const reloadPhaseNames={pistol:'Magazijn wisselen · slede vrijgeven',smg:'Magazijn wisselen · MP5-slap',shotgun:'Patronen laden · pomp doorhalen',sniper:'Magazijn wisselen · grendel bedienen',ak:'Magazijn inhaken · grendel doorhalen',minigun:'Voerdeksel openen · munitieband plaatsen'};
+function makeReloadRig(k){
+ const mag=new THREE.Group(),action=new THREE.Group(),hand=new THREE.Group(),shell=new THREE.Group(),belt=new THREE.Group();
+ mag.name='reloadMagazine';action.name='reloadAction';hand.name='reloadHand';shell.name='reloadShell';belt.name='reloadBelt';
+ // Pick only the existing magazine/slide/pump meshes, preserving their rest pose.
+ const pieces=gun.children.slice();for(const o of pieces){if(!o.isMesh||o===flashM||o.userData.ironSight)continue;const{x,y,z}=o.position;let magazine=false,mechanism=false;
+  if(k==='pistol'){magazine=y<-.23&&Math.abs(x)<.04&&z>.05&&z<.2;mechanism=y>.015&&y<.14&&Math.abs(x)<.055&&z>-.36&&z<.25}
+  if(k==='smg')magazine=y<-.12&&Math.abs(x)<.027&&z>-.14&&z<.02;
+  if(k==='shotgun')mechanism=z<-.25&&z>-.62&&y<-.015&&y>-.1&&o.scale.x>.065;
+  if(k==='sniper')magazine=y<-.06&&y>-.17&&Math.abs(x)<.03&&Math.abs(z)<.09;
+  if(k==='ak')magazine=y<-.1&&y>-.43&&Math.abs(x)<.035&&z<.02&&z>-.3;
+  if(magazine)mag.add(o);else if(mechanism)action.add(o);
+ }
+ gun.add(mag,action,hand,shell,belt);
+ const dark=new THREE.MeshStandardMaterial({color:0x262b30,roughness:.65}),skin=new THREE.MeshStandardMaterial({color:0x8b664c,roughness:.8}),brass=new THREE.MeshStandardMaterial({color:0xb99a50,metalness:.7,roughness:.3}),red=new THREE.MeshStandardMaterial({color:0x9c2720,roughness:.6});
+ const box=(m,x,y,z,a,b,c,g)=>part(gB,m,x,y,z,a,b,c,g);
+ box(dark,0,0,0,.075,.065,.11,hand);for(let i=0;i<3;i++)box(skin,-.026+i*.026,.027,-.035,.021,.025,.06,hand);box(dark,0,-.055,.055,.09,.13,.12,hand);
+ if(k==='pistol')box(dark,0,-.17,.1,.045,.18,.065,mag);
+ if(k==='sniper')box(dark,0,-.15,.015,.052,.14,.14,mag);
+ if(k==='smg'||k==='ak'||k==='sniper'){const z=k==='smg'?-.3:.05;box(dark,k==='smg'?-.06:.075,.05,z,.06,.018,.025,action)}
+ box(red,0,0,0,.025,.025,.065,shell);box(brass,0,0,.035,.027,.027,.012,shell);
+ for(let i=0;i<8;i++){box(brass,-.16-i*.022,-.015+Math.sin(i*.5)*.025,.09,.015,.065,.015,belt);box(dark,-.16-i*.022,-.015,.09,.024,.012,.018,belt)}
+ let cover=null;if(k==='minigun'){cover=new THREE.Group();cover.name='reloadFeedCover';cover.position.set(-.1,.115,.05);box(dark,-.04,0,0,.1,.018,.22,cover);gun.add(cover)}
+ reloadRig={k,mag,action,hand,shell,belt,cover};hand.visible=shell.visible=false;belt.visible=k==='minigun';
+}
+try{const originalBuild=buildGun;buildGun=function(k){originalBuild(k);makeReloadRig(k)};buildGun(cur)}catch(e){console.warn('reload rig',e)}
+function animateWeaponReload(){
+ const rig=reloadRig;if(!rig||rig.k!==cur)return;const{mag,action,hand,shell,belt,cover}=rig;
+ for(const o of[mag,action,hand,shell,belt]){o.position.set(0,0,0);o.rotation.set(0,0,0)}mag.visible=true;hand.visible=shell.visible=false;belt.visible=cur==='minigun';if(cover)cover.rotation.z=0;
+ if(!reloading||!reloadDuration)return;
+ const t=Math.max(0,Math.min(1,1-reloading/reloadDuration)),smooth=(a,b)=>{const x=Math.max(0,Math.min(1,(t-a)/(b-a)));return x*x*(3-2*x)},pulse=(a,b,c)=>smooth(a,b)*(1-smooth(b,c));
+ const ready=Math.sin(Math.PI*t);gun.position.y+=ready*.015;gun.position.z-=ready*.18;gun.position.x-=ready*.07;gun.rotation.z+=ready*(cur==='shotgun'?-.42:cur==='minigun'?.12:.24);gun.rotation.x+=ready*.12;
+ hand.visible=true;hand.position.set(-.1,-.11,.05);
+ if(cur==='shotgun'){
+  const load=Math.max(0,Math.min(1,(t-.12)/.65)),cycle=(load*Math.max(1,reloadMissing))%1,inserting=t>.12&&t<.77;
+  shell.visible=inserting;shell.position.set(-.16*(1-cycle),-.15+.1*cycle,.08);shell.rotation.y=Math.PI*.5;
+  hand.position.set(-.18*(1-cycle),-.18+.08*cycle,.1);
+  const pump=pulse(.78,.87,.98);action.position.z=pump*.16;if(t>=.77)hand.position.set(-.04,-.1,-.4+pump*.16);
+ }else if(cur==='minigun'){
+  const open=smooth(.05,.22)*(1-smooth(.78,.94));cover.rotation.z=open*1.5;
+  const replace=pulse(.2,.46,.72);belt.position.set(-replace*.19,-replace*.14,replace*.06);hand.position.set(-.2-replace*.15,-.06-replace*.1,.1);
+ }else{
+  const out=smooth(.08,.27)*(1-smooth(.43,.64));mag.position.y=-out*.23;mag.position.x=-out*.035;
+  if(cur==='ak'){mag.rotation.x=-out*.65;mag.position.z=out*.07}
+  hand.position.set(-.035-out*.03,-.2-out*.2,.04);
+  const operate=pulse(.68,.8,.95);
+  if(cur==='pistol')action.position.z=operate*.09;
+  if(cur==='smg'){action.position.z=smooth(.02,.12)*(1-smooth(.75,.83))*.11;if(t>.65)hand.position.set(-.1,.07,-.26);hand.rotation.z=operate*-.8}
+  if(cur==='sniper'||cur==='ak'){action.position.z=operate*.12;if(t>.65)hand.position.set(.09,.04,.03+operate*.12)}
+ }
+}
+
 // ===== toren links met trap naar het veld =====
 function gh(x,z){let h=0;if(Math.abs(x)<35&&Math.abs(z)<1.5)h=6;
  if(x>-43&&x<-35&&z>-4&&z<4)h=6;
@@ -1193,17 +1247,18 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
   if(hp<=0||php<=0){hp=Math.max(0,hp);state='over';suspendedState=null;updateContinueButton();document.exitPointerLock&&document.exitPointerLock();saveHS();$('ovT').textContent=(php<=0?'Je werd in het veld gedood op golf ':'Je hield stand tot golf ')+wave+' en doodde '+kills+' vijanden. '+(wave>prevBest?'Nieuw record!':'Record: golf '+hs.wave+'.');showHS();$('ovOver').classList.add('on')}
   else if(!list.length&&!alive)endWave();
   $('left').textContent='Vijanden: '+(alive+list.length);{const c={2:0,3:0,4:0,5:0,6:0,8:0,9:0};for(const a of A)if(a.state!='dead')c[a.kind]++;$('side').innerHTML='Ridders <b style="color:var(--ink)">'+c[2]+'/15</b><br>Paarden <b style="color:var(--ink)">'+c[3]+'/15</b><br>Schutters <b style="color:var(--ink)">'+c[4]+'/8</b>'+extraSide()}{const bo=E.find(e=>e.boss&&e.state!='dead');$('bossb').style.display=bo?'block':'none';if(bo){$('bossn').textContent=bo.name;$('bossh').style.width=Math.max(0,bo.hp/bo.mx*100)+'%'}}
-  $('cross').classList.toggle('mg',cur=='minigun');$('hpb').style.width=hp+'%';$('pl').style.display=(php<100||pGnd())?'block':'none';$('phb').style.width=Math.max(0,php)+'%';$('pht').textContent=Math.ceil(Math.max(0,php));$('hpt').textContent=Math.ceil(hp);$('gd').textContent=goldText();$('am').textContent=infiniteAmmo()?'∞':ammo;$('mg').textContent=infiniteAmmo()?'∞':rsv[cur]||0;$('rl').innerHTML=ORD.map((k,i)=>'<span style="opacity:'+(owned[k]?(k==cur?1:.6):.2)+'">'+(i+1)+'</span>').join(' ')+' · '+(reloading?'Herladen...':(ammo<=0&&!(rsv[cur]>0))?'GEEN KOGELS · wissel van wapen (1-6) of koop ammo na de golf':W[cur].n+(wup[cur]?' '+'★'.repeat(wup[cur]):''))+' · G: granaat '+gren+'/8';
+  $('cross').classList.toggle('mg',cur=='minigun');$('hpb').style.width=hp+'%';$('pl').style.display=(php<100||pGnd())?'block':'none';$('phb').style.width=Math.max(0,php)+'%';$('pht').textContent=Math.ceil(Math.max(0,php));$('hpt').textContent=Math.ceil(hp);$('gd').textContent=goldText();$('am').textContent=infiniteAmmo()?'∞':ammo;$('mg').textContent=infiniteAmmo()?'∞':rsv[cur]||0;$('rl').innerHTML=ORD.map((k,i)=>'<span style="opacity:'+(owned[k]?(k==cur?1:.6):.2)+'">'+(i+1)+'</span>').join(' ')+' · '+(reloading?'Herladen · '+W[cur].n+' · '+reloadPhaseNames[cur]:(ammo<=0&&!(rsv[cur]>0))?'GEEN KOGELS · wissel van wapen (1-6) of koop ammo na de golf':W[cur].n+(wup[cur]?' '+'★'.repeat(wup[cur]):''))+' · G: granaat '+gren+'/8';
  }
  for(const p of P){p.v.y-=18*dt;if(p.m.position.y>.06){p.m.position.addScaledVector(p.v,dt);if(p.m.position.y<=.06){p.m.position.y=.06;p.v.set(0,0,0);p.m.scale.y=.15}}p.l-=dt;if(p.l<0){scene.remove(p.m);p.dead=1}}
  for(let i=P.length-1;i>=0;i--)if(P[i].dead)P.splice(i,1);
  for(const d of D){const t=d.m.scale.x;if(t<d.s)d.m.scale.setScalar(Math.min(d.s,t+dt*d.s*.6))}
- for(let i=T.length-1;i>=0;i--){T[i].t-=dt;if(T[i].t<0){scene.remove(T[i].l);T.splice(i,1)}}kick*=.85;fl-=dt;flashM.visible=fl>0;if(upg.on)updUpg(dt);else{gun.position.set(.28*(1-ads),cur=='minigun'?-.26-.08*ads:-.26+.09*ads,-.6+kick);gun.rotation.set(reloading?-.6:0,0,0);gun.scale.setScalar(1);
+ for(let i=T.length-1;i>=0;i--){T[i].t-=dt;if(T[i].t<0){scene.remove(T[i].l);T.splice(i,1)}}kick*=.85;fl-=dt;flashM.visible=fl>0;if(upg.on)updUpg(dt);else{gun.position.set(.28*(1-ads),cur=='minigun'?-.26-.08*ads:-.26+.09*ads,-.6+kick);gun.rotation.set(0,0,0);gun.scale.setScalar(1);
  sprintBlend+=((state==='play'&&sprinting?1:0)-sprintBlend)*Math.min(1,dt*12);
  if(state==='play'&&sprinting)sprintPhase+=dt*14;
  const bob=Math.sin(sprintPhase),sway=Math.cos(sprintPhase*.5);
  gun.position.x+=sprintBlend*(.12+sway*.035);gun.position.y+=sprintBlend*(-.13+Math.abs(bob)*.055);gun.position.z+=sprintBlend*.1;
  gun.rotation.x+=sprintBlend*(-.32+bob*.075);gun.rotation.y+=sprintBlend*.35;gun.rotation.z+=sprintBlend*(.3+sway*.055)}
+ if(!upg.on)animateWeaponReload();
  hmv=Math.max(0,hmv-dt*5);$('hm').style.opacity=hmv;flv=Math.max(0,flv-dt*2.5);$('flash').style.opacity=flv;
  shake*=.88;cG.position.x*=.8;
  cam.position.set(px+(R()-.5)*shake,cyv+1.7+(R()-.5)*shake*.6,pz+(R()-.5)*shake*.4);cam.rotation.set(pitch,yaw,0);updSky(dt);XT(dt,tt);for(const f of eA)f(dt,tt);
