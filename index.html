@@ -53,7 +53,7 @@ input[type=range]{accent-color:var(--acc);width:100%}
 <div class="hud" id="streak" style="right:22px;bottom:120px;text-align:center"><svg id="stf" viewBox="0 0 24 32" width="58" height="76"><path id="stp" d="M12 1c1 6 9 10 9 19a9 9 0 0 1-18 0c0-5 3-8 5-11 1 3 2 4 4 4-1-4-1-8 0-12z" fill="#ff3b2f"/><path d="M12 14c1 3 4 5 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5 1 1 2 1 2-3z" fill="#fff" fill-opacity=".55"/></svg><div id="stx" style="font-size:36px;font-weight:700;line-height:1;color:#ff3b2f">1x</div><div class="bar" style="width:74px;margin:4px auto 0"><i id="stb" style="width:0"></i></div></div>
 <div id="scope"></div><div class="hud" id="cross"></div><div id="hm"></div><div id="flash"></div><div id="banner"></div>
 <div class="ov on" id="ovStart"><h1>Kasteelwacht</h1><p>Je staat op de muur. Het leger van het kwaadaardige kasteel aan de overkant komt eraan. Soldaten doen 10 schade aan je kasteel, reuzen 20. Het kasteel heeft 100 HP en de golven stoppen nooit.</p><p>Muis: richten · Linkermuisknop: schieten · Rechtermuisknop: richten/inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen (tijdens herladen kun je niet inzoomen) · W/A/S/D: lopen · Shift: sprinten · O of ⚙: instellingen · ESC: pauze · Kopschoten doen dubbele schade.</p><p id="hsStart" style="color:var(--acc)"></p><button id="go">Nieuw spel</button><button id="continueGame" style="display:none">Spel hervatten</button><button id="sandbox">Sandbox</button></div>
-<div class="ov" id="ovDone"><h1 id="doneT">Golf 1 gehaald!</h1><p>Goud: <b id="gold3" style="color:var(--acc)"></b> &middot; Beweeg de muis naar een knop om verder te gaan.</p><div id="doneBtns"><button id="bUp">Upgrades</button><button id="bNext">Volgende Golf</button><button id="bHome">Home</button></div></div>
+<div class="ov" id="ovDone"><h1 id="doneT">Golf 1 gehaald!</h1><p>Goud: <b id="gold3" style="color:var(--acc)"></b> &middot; Beweeg de muis naar een knop om verder te gaan.</p><div id="doneBtns"><button id="bUp">Upgrades</button><button id="bNext">Volgende Golf</button><button id="bHome">Verlaat spel</button></div></div>
 <div class="ov" id="ovShop"><div id="goldBar">Totaal goud: <b id="gold2"></b></div><h1 id="shT">Upgrades</h1><p>Upgrades gaan tot niveau 10 en worden steeds duurder.</p><div id="cards"></div><button id="shBack">Terug</button></div>
 <div class="ov" id="ovPause"><h1>Pauze</h1><p>Het spel staat stil. Druk op ESC of klik op de knop om verder te gaan.</p><p>W/A/S/D: lopen · Shift: sprinten (1,5×, gebruikt stamina) · Spatie: springen · Rechtermuisknop: inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen · G: granaat gooien · B: schild plaatsen (vanaf golf 35)</p><button id="resume">Verder spelen</button><button id="leaveGame">Verlaat spel</button></div>
 <div class="ov" id="ovLeave" role="dialog" aria-modal="true" aria-labelledby="leaveTitle"><h1 id="leaveTitle">Spel verlaten?</h1><div style="display:flex;gap:18px"><button id="leaveYes">Ja</button><button id="leaveNo">Nee</button></div></div>
@@ -488,7 +488,7 @@ let consoleEscapeHeld=false,suppressConsoleUnlock=false;
 const isGod=()=>sandboxMode&&cheats.godmode;
 const infiniteAmmo=()=>sandboxMode&&cheats.maxammo;
 const goldText=()=>sandboxMode?'∞':gold;
-let consoleReturnState='play',suspendedState=null;
+let consoleReturnState='play',suspendedState=null,leaveReturnState='play';
 function commandMessage(message){const output=$('commandOutput'),line=document.createElement('div');line.textContent=message;output.append(line);while(output.children.length>30)output.firstElementChild.remove();output.scrollTop=output.scrollHeight}
 function clearPlayerInput(){for(const k in keys)keys[k]=false;down=false;adsOn=false;sprinting=false}
 function openCommandConsole(){if(!sandboxMode||setOpen||!['play','pause','shop'].includes(state))return;
@@ -717,7 +717,7 @@ addEventListener('resize',()=>{if($('ovDone').classList.contains('on'))placeBtns
 function renderShop(){$('gold2').textContent=goldText();const box=$('cards');box.innerHTML='';
  const hd=t=>{const h=document.createElement('h3');h.textContent=t;h.style.cssText='grid-column:1/-1;margin:8px 0 0;color:var(--acc);font-weight:400;text-align:left';box.append(h)};const add=(n,d,pips,lab,dis,fn)=>{const c=document.createElement('div');c.className='card';c.innerHTML='<b>'+n+'</b><span>'+d+'</span>'+(pips?'<i>'+pips+'</i>':'');const b=document.createElement('button');b.textContent=lab;b.disabled=dis;b.onclick=()=>{fn();SFX.coin();renderShop()};c.append(b);box.append(c);return c};
  hd('Upgrades');for(const k in U){const l=lv[k],c=cost(k);add(U[k].n+' · niveau '+l,U[k].d,'●'.repeat(l)+'○'.repeat(10-l),l>=10?'Maximaal':'Upgrade · '+c+' goud',l>=10||gold<c,()=>{gold-=c;lv[k]++;if(k=='armor')castleUp()})}
- hd('Wapens');for(const k in W){const w=W[k],o=owned[k];add(w.n,w.d+'<br><small>'+wstat(k)+'</small>'+(o?'':'<br>Incl. volle munitie ('+AMO[k].mx+' reserve)'),'',o?(cur==k?'In gebruik':'Uitrusten'):'Koop · '+w.price+' goud',o?cur==k:gold<w.price,()=>{ammoBy[cur]=ammo;if(!o){gold-=w.price;owned[k]=1;}cur=k;buildGun(k);if(!o){rsv[k]=AMO[k].mx*wmul(k);ammoBy[k]=st().mag}ammo=Math.min(ammoBy[k]||0,st().mag);reloading=0})}
+ hd('Wapens');for(const k in W){const w=W[k],o=owned[k];add(w.n,w.d+'<br><small>'+wstat(k)+'</small>'+(o?'':'<br>Incl. volle munitie ('+AMO[k].mx+' reserve)'),'',o?'In gebruik':'Koop · '+w.price+' goud',!!o||gold<w.price,()=>{ammoBy[cur]=ammo;if(!o){gold-=w.price;owned[k]=1;}cur=k;buildGun(k);if(!o){rsv[k]=AMO[k].mx*wmul(k);ammoBy[k]=st().mag}ammo=Math.min(ammoBy[k]||0,st().mag);reloading=0})}
   hd('Munitie');for(const k of ORD){const a=AMO[k],o=owned[k],r=rsv[k]||0,mx=a.mx*wmul(k),vol=r>=mx;add(a.n,'+'+a.pk+' kogels · reserve: '+r+' / '+mx+(o?'':' · koop eerst dit wapen'),'',!o?'Wapen niet gekocht':vol?'Voorraad vol':'Koop · '+a.pr+' goud',!o||vol||gold<a.pr,()=>{gold-=a.pr;rsv[k]=Math.min(mx,r+a.pk)});const card=box.lastElementChild,count=Math.min(Math.ceil((mx-r)/a.pk),Math.floor(gold/a.pr)),maxButton=document.createElement('button');maxButton.textContent=count?'Koop maximaal · +'+Math.min(mx-r,count*a.pk)+' kogels · '+count*a.pr+' goud':'Koop maximaal';maxButton.disabled=!o||count<=0;maxButton.onclick=()=>{if(!owned[k])return;const n=Math.min(Math.ceil((mx-(rsv[k]||0))/a.pk),Math.floor(gold/a.pr));if(n<=0)return;gold-=n*a.pr;rsv[k]=Math.min(mx,(rsv[k]||0)+n*a.pk);SFX.coin();renderShop()};card.append(maxButton)}
    hd('Bondgenoten');for(const k in AL){const c=AL[k],n=A.filter(a=>a.kind==k&&a.state!='dead').length,mx=MAXA[k],pr=Math.round(c.price*Math.pow(k==4?1.25:1.12,n));add(c.n+' ('+n+'/'+mx+')',c.d+' · blijft bij elke golf','',n>=mx?'Maximaal ('+mx+')':'Koop · '+pr+' goud',n>=mx||gold<pr,()=>{gold-=pr;spawnAlly(+k)})}
   hd('Bondgenoten upgraden (tot niveau 10)');for(const k of[2,3,4]){const l=alv[k],c=Math.round(AU[k]*Math.pow(1.45,l));add(AL[k].n+' upgrade · niveau '+l,(k==4?'+25% HP en +20% schade per niveau, voor alle bondgenoten van dit type':'+10 HP en +10% kracht per niveau, voor alle bondgenoten van dit type'),'●'.repeat(l)+'○'.repeat(10-l),l>=10?'Maximaal':'Upgrade · '+c+' goud',l>=10||gold<c,()=>{gold-=c;alv[k]++;for(const a of A)if(a.kind==k)allyStat(a)})}
@@ -742,7 +742,7 @@ $('sandbox').onclick=beginSandbox;
 $('bUp').onclick=()=>{$('ovDone').classList.remove('on');renderShop();$('ovShop').classList.add('on')};
 $('shBack').onclick=showDone;
 $('bNext').onclick=()=>{$('ovDone').classList.remove('on');state='play';topUp();reloading=0;lock();startWave()};
-$('bHome').onclick=()=>{suspendGame('shop')};
+$('bHome').onclick=()=>requestLeave('shop');
 
 // ===== speciale eenheden, toren, snelle springers en schildbel =====
 function stp(a){return a.kind==3?1.1:a.kind==5?1.6:.85}
@@ -819,7 +819,7 @@ $('again').onclick=()=>{resetGame();begin()};
 addEventListener('mousemove',e=>{if(state!='play')return;yaw-=e.movementX*.0022*set.sens*cam.fov/baseFov;pitch=Math.max(-1.4,Math.min(1.2,pitch-e.movementY*.0022*set.sens*cam.fov/baseFov))});
 ren.domElement.addEventListener('mousedown',e=>{if(e.button==2)adsOn=true;if(e.button==0){down=true;if(state=='play'&&!document.pointerLockElement)lock()}});
 addEventListener('mouseup',e=>{if(e.button==2)adsOn=false;else down=false});
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code=='KeyR'&&state=='play')reload();if(e.code=='KeyG')throwG();if(e.code=='Escape'&&!e.repeat){e.preventDefault();if(state==='confirmLeave')cancelLeave();else if(setOpen)closeSet();else state=='pause'?resume():pause()}if(e.code=='KeyO')setOpen?closeSet():openSet();const m=/^(Digit|Numpad)([1-6])$/.exec(e.code);if(m)sw(ORD[m[2]-1])});addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code=='KeyR'&&state=='play')reload();if(e.code=='KeyG')throwG();if(e.code=='Escape'&&!e.repeat){e.preventDefault();if(state==='confirmLeave')cancelLeave();else if(setOpen)closeSet();else if(state==='shop'&&$('ovShop').classList.contains('on'))showDone();else state=='pause'?resume():pause()}if(e.code=='KeyO')setOpen?closeSet():openSet();const m=/^(Digit|Numpad)([1-6])$/.exec(e.code);if(m)sw(ORD[m[2]-1])});addEventListener('keyup',e=>keys[e.code]=false);
 addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)});
 const ORD=['pistol','smg','shotgun','sniper','ak','minigun'],ZF={pistol:52,smg:50,shotgun:56,sniper:18,ak:50,minigun:62};let ads=0,adsOn=false,ammoBy={},prevBest=0,hs={wave:0,kills:0};
 try{const j=JSON.parse(localStorage.getItem('kw_hs'));if(j&&j.wave)hs=j}catch(e){}
@@ -850,9 +850,10 @@ function continueGame(){
  if(target==='shop'){state='shop';showDone()}else{state='pause';resume()}
 }
 $('continueGame').onclick=continueGame;
-function leaveGame(){if(state!=='confirmLeave')return;suspendGame('play')}
-function cancelLeave(){if(state!=='confirmLeave')return;$('ovLeave').classList.remove('on');state='pause';resume()}
-$('leaveGame').onclick=()=>{if(state!=='pause')return;state='confirmLeave';$('ovPause').classList.remove('on');$('ovLeave').classList.add('on');$('leaveNo').focus()};
+function leaveGame(){if(state!=='confirmLeave')return;suspendGame(leaveReturnState)}
+function cancelLeave(){if(state!=='confirmLeave')return;$('ovLeave').classList.remove('on');if(leaveReturnState==='shop'){state='shop';showDone()}else{state='pause';resume()}}
+function requestLeave(returnState){if(state!==(returnState==='shop'?'shop':'pause'))return;leaveReturnState=returnState;state='confirmLeave';$('ovPause').classList.remove('on');$('ovDone').classList.remove('on');$('ovShop').classList.remove('on');$('ovLeave').classList.add('on');$('leaveNo').focus()}
+$('leaveGame').onclick=()=>requestLeave('play');
 $('leaveYes').onclick=leaveGame;$('leaveNo').onclick=cancelLeave;
 $('resume').onclick=resume;document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement){suppressConsoleUnlock=false;return}if(!suppressConsoleUnlock&&state=='play')pause()});
 addEventListener('contextmenu',e=>e.preventDefault());showHS();castleUp();
