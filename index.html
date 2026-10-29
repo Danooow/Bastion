@@ -251,9 +251,11 @@ function tree(x,z,s){if(Math.abs(x-riverX(z))<11||Math.abs(x)<32)return;if(Math.
  const base=greens[R()*6|0];for(let i=0;i<11;i++){const a=R()*6.3,rr=R()*2.4*s,r=(1.3+R()*1.1)*s;BL.push({x:x+Math.cos(a)*rr,y:(h+1+R()*2.6)*s,z:z+Math.sin(a)*rr,sx:r,sy:r*.8,sz:r,ry:R()*6,c:i%3?base:greens[R()*6|0]})}}
 function rock(x,z,s){if(Math.abs(x-riverX(z))<9)return;OBS.push({x,z,r:s*1.15,h:s*.8});const r=part(new THREE.DodecahedronGeometry(1),mk(0x77777a),x,s*.3,z,s*1.3,s*.8,s,scene);r.rotation.y=R()*6}
 for(let i=0;i<80;i++)tree((R()<.5?-1:1)*(34+R()*80),-10-R()*112,.8+R()*.9);for(const[x,z]of[[-9,-45],[8,-70],[-3,-98]])tree(x,z,1.1+R()*.3);
+// Dense tree lines sit outside the invisible side barriers (x = ±70).
+for(const side of[-1,1])for(let row=0;row<2;row++)for(let i=0;i<28;i++)tree(side*(80+row*10+R()*4),-4-i*5-R()*2,.9+R()*.4);
 for(let i=0;i<20;i++)tree((R()-.5)*160,30+R()*40,1+R()*.6);
 for(let i=0;i<55;i++)rock((R()-.5)*200,-8-R()*112,.4+R()*1.3);for(let i=0;i<18;i++)rock((R()-.5)*54,-14-R()*100,.55+R()*1.3);
-for(let i=0;i<16;i++){const z=-8-i*6.5-R()*3,x=riverX(z)+(i%2?1:-1)*(9.5+R()*2),s=.9+R()*.5;TR.push({x,y:2.2*s,z,sx:1.1*s,sy:4.4*s,sz:1.1*s,c:0x5a4a34});for(let j=0;j<16;j++){const a=j/16*6.283+R()*.4,rr=(1.2+R()*2.2)*s;BL.push({x:x+Math.cos(a)*rr,y:(2.8+R()*1.6)*s,z:z+Math.sin(a)*rr,sx:.8*s,sy:(1.8+R()*1.4)*s,sz:.8*s,ry:R()*6,c:[0x7a9a45,0x6a8c3c,0x88a850][R()*3|0]})}}
+for(let i=0;i<16;i++){const z=-8-i*6.5-R()*3,x=riverX(z)+(i%2?1:-1)*(9.5+R()*2),s=.9+R()*.5;OBS.push({x,z,r:.65*s,h:4.4*s});TR.push({x,y:2.2*s,z,sx:1.1*s,sy:4.4*s,sz:1.1*s,c:0x5a4a34});for(let j=0;j<16;j++){const a=j/16*6.283+R()*.4,rr=(1.2+R()*2.2)*s;BL.push({x:x+Math.cos(a)*rr,y:(2.8+R()*1.6)*s,z:z+Math.sin(a)*rr,sx:.8*s,sy:(1.8+R()*1.4)*s,sz:.8*s,ry:R()*6,c:[0x7a9a45,0x6a8c3c,0x88a850][R()*3|0]})}}
 {const mkI=(geo,mat,L)=>{const im=new THREE.InstancedMesh(geo,mat,L.length),m=new THREE.Matrix4(),c=new THREE.Color();L.forEach((o,i)=>{m.compose(new THREE.Vector3(o.x,o.y,o.z),new THREE.Quaternion().setFromEuler(new THREE.Euler(o.rx||0,o.ry||0,o.rz||0)),new THREE.Vector3(o.sx,o.sy,o.sz));im.setMatrixAt(i,m);im.setColorAt(i,c.setHex(o.c))});im.castShadow=true;im.frustumCulled=false;scene.add(im);return im};
  const lm=new THREE.MeshLambertMaterial({color:0xffffff,map:LEAFT});mkI(gY,lm,TR);window.LM=[mkI(gI,lm,BL),mkI(gC,lm,CN)]}
 function mount(x,z,r,h){if(Math.abs(x)-r*.75<75&&z+r*.75>-215&&z-r*.75<-90)return;const g=new THREE.ConeGeometry(r,h,10,7,true),p=g.attributes.position,cs=[],c=new THREE.Color();
@@ -1072,14 +1074,19 @@ function gh(x,z){let h=0;if(Math.abs(x)<35&&Math.abs(z)<1.5)h=6;
  B(stone,-39,6.8,4,6.4,1.6,.6);B(stone,-43,6.8,0,.6,1.6,6.4);B(stone,-35,6.8,-2.1,.6,1.6,1.2);B(stone,-35,6.8,2.1,.6,1.6,1.2);B(stone,-41.4,6.8,-4,.7,1.6,.6);B(stone,-36.6,6.8,-4,.7,1.6,.6);
  for(let i=1;i<=11;i++){const h=6-i*.5,cz=-4-(i-.5)*.9;B(stone,-39,h/2,cz,4,h,.9);B(lm,-39,h+.02,cz,4,.05,.9);for(const x of[-41.25,-36.75])B(stone,x,(h+1.5)/2,cz,.5,h+1.5,.9)}
  const sg=nameTag('Trap ↓');sg.scale.set(3.4,.85,1);sg.position.set(-39,8.6,-4.3);scene.add(sg)}
-const SPD=9,PLAYER_RADIUS=.38;
+const SPD=9,PLAYER_RADIUS=.38,PLAYER_BOUNDS={left:-70,right:70,back:.9,front:-105},MAX_LOW_PROP=1.5;
+function playerSurface(x,z){let h=gh(x,z);for(const o of OBS)if(o.h<=MAX_LOW_PROP&&Math.hypot(x-o.x,z-o.z)<o.r+PLAYER_RADIUS*.6)h=Math.max(h,o.h);return h}
+function constrainPlayer(){px=Math.max(PLAYER_BOUNDS.left+PLAYER_RADIUS,Math.min(PLAYER_BOUNDS.right-PLAYER_RADIUS,px));pz=Math.max(PLAYER_BOUNDS.front,Math.min(PLAYER_BOUNDS.back-PLAYER_RADIUS,pz))}
+
 function moveFlyingPlayer(dt,locked){
  const fw=(keys.KeyW?1:0)-(keys.KeyS?1:0),sd=(keys.KeyD?1:0)-(keys.KeyA?1:0),up=(keys.Space?1:0)-((keys.ControlLeft||keys.ControlRight)?1:0),speed=movementSpeed(dt,!!(fw||sd||up),locked);
  if(!locked){const sn=Math.sin(yaw),cs=Math.cos(yaw),n=Math.hypot(fw,sd,up)||1,v=SPD*speed*dt/n;
- px=Math.max(-600,Math.min(600,px+(-sn*fw+cs*sd)*v));pz=Math.max(-600,Math.min(600,pz+(-cs*fw-sn*sd)*v));py=Math.max(gh(px,pz),Math.min(200,py+up*v))}
- if(py<=gh(px,pz)+.001){flying=false;lastSpaceTap=-Infinity;py=gh(px,pz);vy=0;grd=true}else{vy=0;grd=false}cyv+=(py-cyv)*Math.min(1,dt*22);
+ py=Math.min(200,py+up*v);movePlayerHorizontal((-sn*fw+cs*sd)*v,(-cs*fw-sn*sd)*v,true);py=Math.max(playerSurface(px,pz),py)}
+ if(py<=playerSurface(px,pz)+.001){flying=false;lastSpaceTap=-Infinity;py=playerSurface(px,pz);vy=0;grd=true}else{vy=0;grd=false}cyv+=(py-cyv)*Math.min(1,dt*22);
 }
 function playerBlocked(x,z){
+ if(x<PLAYER_BOUNDS.left+PLAYER_RADIUS||x>PLAYER_BOUNDS.right-PLAYER_RADIUS||z>PLAYER_BOUNDS.back-PLAYER_RADIUS||z<PLAYER_BOUNDS.front)return true;
+ for(const o of OBS)if(Math.hypot(x-o.x,z-o.z)<o.r+PLAYER_RADIUS&&((o.h>MAX_LOW_PROP&&!isFlying())||py<o.h-.03))return true;
  const r=PLAYER_RADIUS,over=(a,b,c,d)=>x+r>a&&x-r<b&&z+r>c&&z-r<d;
  if(py<5.95&&over(-35,35,-1.5,1.5))return true;
  if(py<6.98&&py+1.7>6&&over(-35,35,1.05,1.55))return true;
@@ -1088,14 +1095,16 @@ function playerBlocked(x,z){
  return false;
 }
 function onWall(){return py>5.4&&grd}
-function tryMove(dx,dz){let nx=Math.max(-70,Math.min(44,px+dx)),nz=Math.max(-105,Math.min(9,pz+dz));if(py>5.4&&nx>25)nx=25;if(playerBlocked(nx,nz))return;const h=gh(nx,nz);if(h>py+(grd?.55:.15))return;if(grd&&h<py-1.2)return;px=nx;pz=nz}
-function movePlayer(dt,lock){if(!isGod())flying=false;if(isFlying()){moveFlyingPlayer(dt,lock);return}const fw=(keys.KeyW?1:0)-(keys.KeyS?1:0),sd=(keys.KeyD?1:0)-(keys.KeyA?1:0),speed=movementSpeed(dt,!!(fw||sd),lock);if(!lock){if(fw||sd){let dx,dz;{const sn=Math.sin(yaw),cs=Math.cos(yaw);dx=-sn*fw+cs*sd;dz=-cs*fw-sn*sd}const v=SPD*speed*dt/(Math.hypot(dx,dz)||1);tryMove(dx*v,0);tryMove(0,dz*v)}}
- const h=gh(px,pz);if(grd){if(h<py-.02){grd=false;vy=0}else py=Math.max(py,h)}
- if(!grd){vy-=24*dt;py+=vy*dt;const h2=gh(px,pz);if(py<=h2){py=h2;vy=0;grd=true}}
+function tryMove(dx,dz,air=false){const nx=px+dx,nz=pz+dz;if(playerBlocked(nx,nz))return;const h=playerSurface(nx,nz);if(!air){if(h>py+(grd?.55:.15))return;if(grd&&h<py-1.2)return}px=nx;pz=nz}
+// Small collision steps prevent sprinting through narrow props; separate axes slide along edges.
+function movePlayerHorizontal(dx,dz,air=false){const n=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.12));for(let i=0;i<n;i++){tryMove(dx/n,0,air);tryMove(0,dz/n,air)}constrainPlayer()}
+function movePlayer(dt,lock){if(!isGod())flying=false;if(isFlying()){moveFlyingPlayer(dt,lock);return}const fw=(keys.KeyW?1:0)-(keys.KeyS?1:0),sd=(keys.KeyD?1:0)-(keys.KeyA?1:0),speed=movementSpeed(dt,!!(fw||sd),lock);if(!lock){if(fw||sd){let dx,dz;{const sn=Math.sin(yaw),cs=Math.cos(yaw);dx=-sn*fw+cs*sd;dz=-cs*fw-sn*sd}const v=SPD*speed*dt/(Math.hypot(dx,dz)||1);movePlayerHorizontal(dx*v,dz*v)}}
+ const h=playerSurface(px,pz);if(grd){if(h<py-.02){grd=false;vy=0}else py=Math.max(py,h)}
+ if(!grd){vy-=24*dt;py+=vy*dt;const h2=playerSurface(px,pz);if(py<=h2){py=h2;vy=0;grd=true}}
  cyv+=(py-cyv)*Math.min(1,dt*22)}
 addEventListener('keydown',e=>{
  if(e.code!=='Space'||e.repeat||state!=='play'||upg.on)return;e.preventDefault();
- if(isGod()){const now=performance.now();if(now-lastSpaceTap<=300){lastSpaceTap=-Infinity;flying=!flying;vy=0;if(flying){grd=false;py=Math.max(py,gh(px,pz)+.1)}return}lastSpaceTap=now}else{lastSpaceTap=-Infinity;flying=false}
+ if(isGod()){const now=performance.now();if(now-lastSpaceTap<=300){lastSpaceTap=-Infinity;flying=!flying;vy=0;if(flying){grd=false;py=Math.max(py,playerSurface(px,pz)+.1)}return}lastSpaceTap=now}else{lastSpaceTap=-Infinity;flying=false}
  if(!isFlying()&&grd){vy=8.5;grd=false}
 });
 
