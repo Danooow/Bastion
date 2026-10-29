@@ -1,2 +1,0 @@
-# Bastion
-Defense game
