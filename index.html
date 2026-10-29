@@ -52,7 +52,7 @@ input[type=range]{accent-color:var(--acc);width:100%}
 <div class="hud" id="side" style="left:0;top:174px;padding:6px 14px 6px 12px;font-size:14px;line-height:1.5;background:#000a;border-left:3px solid var(--acc);color:var(--mut)"></div>
 <div class="hud" id="streak" style="right:22px;bottom:120px;text-align:center"><svg id="stf" viewBox="0 0 24 32" width="58" height="76"><path id="stp" d="M12 1c1 6 9 10 9 19a9 9 0 0 1-18 0c0-5 3-8 5-11 1 3 2 4 4 4-1-4-1-8 0-12z" fill="#ff3b2f"/><path d="M12 14c1 3 4 5 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5 1 1 2 1 2-3z" fill="#fff" fill-opacity=".55"/></svg><div id="stx" style="font-size:36px;font-weight:700;line-height:1;color:#ff3b2f">1x</div><div class="bar" style="width:74px;margin:4px auto 0"><i id="stb" style="width:0"></i></div></div>
 <div id="scope"></div><div class="hud" id="cross"></div><div id="hm"></div><div id="flash"></div><div id="banner"></div>
-<div class="ov on" id="ovStart"><h1>Kasteelwacht</h1><p>Je staat op de muur. Het leger van het kwaadaardige kasteel aan de overkant komt eraan. Soldaten doen 10 schade aan je kasteel, reuzen 20. Het kasteel heeft 100 HP en de golven stoppen nooit.</p><p>Muis: richten · Linkermuisknop: schieten · Rechtermuisknop: richten/inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen (tijdens herladen kun je niet inzoomen) · W/A/S/D: lopen · Shift: sprinten · O of ⚙: instellingen · ESC: pauze · Kopschoten doen dubbele schade.</p><p id="hsStart" style="color:var(--acc)"></p><button id="go">Start golf 1</button><button id="sandbox">Sandbox · golf 1</button><button id="newg" style="display:none">Nieuw spel</button></div>
+<div class="ov on" id="ovStart"><h1>Kasteelwacht</h1><p>Je staat op de muur. Het leger van het kwaadaardige kasteel aan de overkant komt eraan. Soldaten doen 10 schade aan je kasteel, reuzen 20. Het kasteel heeft 100 HP en de golven stoppen nooit.</p><p>Muis: richten · Linkermuisknop: schieten · Rechtermuisknop: richten/inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen (tijdens herladen kun je niet inzoomen) · W/A/S/D: lopen · Shift: sprinten · O of ⚙: instellingen · ESC: pauze · Kopschoten doen dubbele schade.</p><p id="hsStart" style="color:var(--acc)"></p><button id="go">Nieuw spel</button><button id="continueGame" style="display:none">Spel hervatten</button><button id="sandbox">Sandbox</button></div>
 <div class="ov" id="ovDone"><h1 id="doneT">Golf 1 gehaald!</h1><p>Goud: <b id="gold3" style="color:var(--acc)"></b> &middot; Beweeg de muis naar een knop om verder te gaan.</p><div id="doneBtns"><button id="bUp">Upgrades</button><button id="bNext">Volgende Golf</button><button id="bHome">Home</button></div></div>
 <div class="ov" id="ovShop"><div id="goldBar">Totaal goud: <b id="gold2"></b></div><h1 id="shT">Upgrades</h1><p>Upgrades gaan tot niveau 10 en worden steeds duurder.</p><div id="cards"></div><button id="shBack">Terug</button></div>
 <div class="ov" id="ovPause"><h1>Pauze</h1><p>Het spel staat stil. Druk op ESC of klik op de knop om verder te gaan.</p><p>W/A/S/D: lopen · Shift: sprinten (1,5×, gebruikt stamina) · Spatie: springen · Rechtermuisknop: inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen · G: granaat gooien · B: schild plaatsen (vanaf golf 35)</p><button id="resume">Verder spelen</button><button id="leaveGame">Verlaat spel</button></div>
@@ -488,7 +488,7 @@ let consoleEscapeHeld=false,suppressConsoleUnlock=false;
 const isGod=()=>sandboxMode&&cheats.godmode;
 const infiniteAmmo=()=>sandboxMode&&cheats.maxammo;
 const goldText=()=>sandboxMode?'∞':gold;
-let consoleReturnState='play';
+let consoleReturnState='play',suspendedState=null;
 function commandMessage(message){const output=$('commandOutput'),line=document.createElement('div');line.textContent=message;output.append(line);while(output.children.length>30)output.firstElementChild.remove();output.scrollTop=output.scrollHeight}
 function clearPlayerInput(){for(const k in keys)keys[k]=false;down=false;adsOn=false;sprinting=false}
 function openCommandConsole(){if(!sandboxMode||setOpen||!['play','pause','shop'].includes(state))return;
@@ -726,7 +726,7 @@ function renderShop(){$('gold2').textContent=goldText();const box=$('cards');box
 function lock(){try{const p=ren.domElement.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}}
 function positionPlayerAtCastle(){px=0;py=6;pz=0;cyv=6;vy=0;grd=true;yaw=0;pitch=-Math.atan2(10-7.7,130);shake=0;resetMovement()}
 function begin(){positionPlayerAtCastle();playBgm();prevBest=hs.wave;au().resume&&au().resume();$('ovStart').classList.remove('on');$('ovShop').classList.remove('on');$('ovDone').classList.remove('on');$('ovOver').classList.remove('on');state='play';topUp();lock();startWave()}
-$('go').onclick=begin;
+$('go').onclick=()=>{resetGame();begin()};
 function beginSandbox(){
  resetGame();sandboxMode=true;wave=0;gold=Infinity;$('gd').textContent=goldText();
  for(const k in lv)lv[k]=10;
@@ -742,7 +742,7 @@ $('sandbox').onclick=beginSandbox;
 $('bUp').onclick=()=>{$('ovDone').classList.remove('on');renderShop();$('ovShop').classList.add('on')};
 $('shBack').onclick=showDone;
 $('bNext').onclick=()=>{$('ovDone').classList.remove('on');state='play';topUp();reloading=0;lock();startWave()};
-$('bHome').onclick=()=>{$('ovDone').classList.remove('on');state='menu';$('go').textContent='Verder: golf '+(wave+1);$('newg').style.display='';$('ovStart').classList.add('on')};
+$('bHome').onclick=()=>{suspendGame('shop')};
 
 // ===== speciale eenheden, toren, snelle springers en schildbel =====
 function stp(a){return a.kind==3?1.1:a.kind==5?1.6:.85}
@@ -814,8 +814,8 @@ function specialShop(hd,add){const nx=wave+1,cn=k=>A.filter(a=>a.kind==k&&a.stat
  row(30,'Toren in het midden','500 HP · 4 soldaten met AK-47 bovenop · max 1',3500,cn(8),1,()=>spawnTower());
  if(nx<35)add('Schildbel','Beschikbaar vanaf golf 35','','Vergrendeld',true,()=>{});
  else add('Schildbel (voorraad '+shStock+')','Plaats met B · beschermt je basis 30 s · na aankoop 3 golven wachten · knippert vanaf 25 s · vijanden komen er niet door, jij en je troepen kunnen wel schieten en aanvallen','',(wave<shNextBuyWave?'Wacht nog '+(shNextBuyWave-wave)+' golven':'Koop · 750 goud'),gold<750||wave<shNextBuyWave,()=>{if(wave<shNextBuyWave||gold<750)return;gold-=750;shStock++;shNextBuyWave=wave+3})}
-function resetGame(){for(const k in cheats)cheats[k]=false;$('commandConsole').classList.remove('open');$('commandOutput').textContent='';sandboxMode=false;resetMovement();$('go').textContent='Start golf 1';$('newg').style.display='none';for(const e of E)scene.remove(e.g);E.length=0;for(const a of A){scene.remove(a.g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}}A.length=0;shStock=0;shNextBuyWave=0;clearFireballs();shOn=0;shM.visible=shW.visible=false;for(const b of B)scene.remove(b.m);B.length=0;for(const p of P)scene.remove(p.m);P.length=0;for(const d of D)scene.remove(d.m);D.length=0;wave=0;gold=0;hp=100;php=100;kills=0;for(const k in lv)lv[k]=0;gren=0;streak=0;streakT=0;for(const k in alv)alv[k]=0;for(const k in owned)delete owned[k];for(const k in wup)delete wup[k];upg.on=0;px=0;py=6;pz=0;vy=0;grd=true;cyv=6;owned.pistol=1;cur='pistol';buildGun('pistol');initAmmo();castleUp();applyEra()}
-$('again').onclick=()=>{resetGame();begin()};$('newg').onclick=()=>{resetGame();$('ovStart').classList.remove('on');begin()};
+function resetGame(){for(const k in cheats)cheats[k]=false;$('commandConsole').classList.remove('open');$('commandOutput').textContent='';sandboxMode=false;resetMovement();suspendedState=null;updateContinueButton();for(const e of E)scene.remove(e.g);E.length=0;for(const a of A){scene.remove(a.g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}}A.length=0;shStock=0;shNextBuyWave=0;clearFireballs();shOn=0;shM.visible=shW.visible=false;for(const b of B)scene.remove(b.m);B.length=0;for(const p of P)scene.remove(p.m);P.length=0;for(const d of D)scene.remove(d.m);D.length=0;wave=0;gold=0;hp=100;php=100;kills=0;for(const k in lv)lv[k]=0;gren=0;streak=0;streakT=0;for(const k in alv)alv[k]=0;for(const k in owned)delete owned[k];for(const k in wup)delete wup[k];upg.on=0;px=0;py=6;pz=0;vy=0;grd=true;cyv=6;owned.pistol=1;cur='pistol';buildGun('pistol');initAmmo();castleUp();applyEra()}
+$('again').onclick=()=>{resetGame();begin()};
 addEventListener('mousemove',e=>{if(state!='play')return;yaw-=e.movementX*.0022*set.sens*cam.fov/baseFov;pitch=Math.max(-1.4,Math.min(1.2,pitch-e.movementY*.0022*set.sens*cam.fov/baseFov))});
 ren.domElement.addEventListener('mousedown',e=>{if(e.button==2)adsOn=true;if(e.button==0){down=true;if(state=='play'&&!document.pointerLockElement)lock()}});
 addEventListener('mouseup',e=>{if(e.button==2)adsOn=false;else down=false});
@@ -837,7 +837,20 @@ function scrollWeapon(e){
 ren.domElement.addEventListener('wheel',scrollWeapon,{passive:false});
 function pause(){if(state!='play')return;state='pause';suppressConsoleUnlock=true;clearPlayerInput();document.exitPointerLock&&document.exitPointerLock();$('ovPause').classList.add('on')}
 function resume(){if(state!='pause')return;$('ovPause').classList.remove('on');suppressConsoleUnlock=true;clearPlayerInput();state='play';last=performance.now();lock()}
-function leaveGame(){if(state!=='confirmLeave')return;$('ovLeave').classList.remove('on');saveHS();state='menu';suppressConsoleUnlock=true;document.exitPointerLock&&document.exitPointerLock();clearPlayerInput();$('ovPause').classList.remove('on');resetGame();showHS();$('ovStart').classList.add('on')}
+function updateContinueButton(){const button=$('continueGame');button.style.display=suspendedState?'':'none';button.textContent='Spel hervatten · golf '+wave}
+function suspendGame(returnState){
+ saveHS();suspendedState=returnState;state='menu';suppressConsoleUnlock=true;
+ document.exitPointerLock&&document.exitPointerLock();clearPlayerInput();
+ for(const id of ['ovLeave','ovPause','ovDone','ovShop'])$(id).classList.remove('on');
+ updateContinueButton();showHS();$('ovStart').classList.add('on');
+}
+function continueGame(){
+ if(!suspendedState)return;const target=suspendedState;suspendedState=null;updateContinueButton();
+ $('ovStart').classList.remove('on');last=performance.now();clearPlayerInput();playBgm();
+ if(target==='shop'){state='shop';showDone()}else{state='pause';resume()}
+}
+$('continueGame').onclick=continueGame;
+function leaveGame(){if(state!=='confirmLeave')return;suspendGame('play')}
 function cancelLeave(){if(state!=='confirmLeave')return;$('ovLeave').classList.remove('on');state='pause';resume()}
 $('leaveGame').onclick=()=>{if(state!=='pause')return;state='confirmLeave';$('ovPause').classList.remove('on');$('ovLeave').classList.add('on');$('leaveNo').focus()};
 $('leaveYes').onclick=leaveGame;$('leaveNo').onclick=cancelLeave;
@@ -1112,7 +1125,7 @@ eA.push((dt,t)=>{const c=upg.on?upg.charge:0;upFx.vig.style.opacity=upg.on&&upg.
  if(state=='play')drawTab()});
 // loop
 let last=performance.now(),tt=0;
-function frame(now){requestAnimationFrame(frame);if(state==='console'){last=now;return}const dt=['pause','confirmLeave'].includes(state)?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
+function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='menu'){last=now;return}const dt=['pause','confirmLeave'].includes(state)?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
  {ads+=((adsOn&&state=='play'&&!reloading&&!sprinting?1:0)-ads)*Math.min(1,dt*12);const f=baseFov+(ZF[cur]-baseFov)*ads+upFov;if(Math.abs(f-cam.fov)>.01){cam.fov=f;cam.updateProjectionMatrix()}$('scope').style.opacity=cur=='sniper'?Math.max(0,ads*1.4-.4):0;gun.visible=!(cur=='sniper'&&ads>.75);$('cross').style.opacity=1-ads*.7}
  if(state=='play'){
   const s=st();if(infiniteAmmo()){ammo=s.mag;reloading=0}if(isGod()){php=100;hp=100;}if(sandboxMode&&cheats.skipgolf&&(list.length||E.some(e=>e.state!=='dead')))skipRemainingWave();movePlayer(dt,upg.on);if(!pGnd())php=Math.min(100,php+dt*10);
@@ -1129,7 +1142,7 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'){last=now;
   for(let i=E.length-1;i>=0;i--)if(E[i].state=='dead'&&E[i].dt>6){scene.remove(E[i].g);E.splice(i,1)}
   if(!enemiesFrozen()){updVolcano(dt);updBombs(dt,s)}updAllies(dt);updShield(dt);updG(dt);updStreak(dt);
   const alive=E.filter(e=>e.state!='dead').length;
-  if(hp<=0||php<=0){hp=Math.max(0,hp);state='over';document.exitPointerLock&&document.exitPointerLock();saveHS();$('ovT').textContent=(php<=0?'Je werd in het veld gedood op golf ':'Je hield stand tot golf ')+wave+' en doodde '+kills+' vijanden. '+(wave>prevBest?'Nieuw record!':'Record: golf '+hs.wave+'.');showHS();$('ovOver').classList.add('on')}
+  if(hp<=0||php<=0){hp=Math.max(0,hp);state='over';suspendedState=null;updateContinueButton();document.exitPointerLock&&document.exitPointerLock();saveHS();$('ovT').textContent=(php<=0?'Je werd in het veld gedood op golf ':'Je hield stand tot golf ')+wave+' en doodde '+kills+' vijanden. '+(wave>prevBest?'Nieuw record!':'Record: golf '+hs.wave+'.');showHS();$('ovOver').classList.add('on')}
   else if(!list.length&&!alive)endWave();
   $('left').textContent='Vijanden: '+(alive+list.length);{const c={2:0,3:0,4:0,5:0,6:0,8:0,9:0};for(const a of A)if(a.state!='dead')c[a.kind]++;$('side').innerHTML='Ridders <b style="color:var(--ink)">'+c[2]+'/15</b><br>Paarden <b style="color:var(--ink)">'+c[3]+'/15</b><br>Schutters <b style="color:var(--ink)">'+c[4]+'/8</b>'+extraSide()}{const bo=E.find(e=>e.boss&&e.state!='dead');$('bossb').style.display=bo?'block':'none';if(bo){$('bossn').textContent=bo.name;$('bossh').style.width=Math.max(0,bo.hp/bo.mx*100)+'%'}}
   $('cross').classList.toggle('mg',cur=='minigun');$('hpb').style.width=hp+'%';$('pl').style.display=(php<100||pGnd())?'block':'none';$('phb').style.width=Math.max(0,php)+'%';$('pht').textContent=Math.ceil(Math.max(0,php));$('hpt').textContent=Math.ceil(hp);$('gd').textContent=goldText();$('am').textContent=infiniteAmmo()?'∞':ammo;$('mg').textContent=infiniteAmmo()?'∞':rsv[cur]||0;$('rl').innerHTML=ORD.map((k,i)=>'<span style="opacity:'+(owned[k]?(k==cur?1:.6):.2)+'">'+(i+1)+'</span>').join(' ')+' · '+(reloading?'Herladen...':(ammo<=0&&!(rsv[cur]>0))?'GEEN KOGELS · wissel van wapen (1-6) of koop ammo na de golf':W[cur].n+(wup[cur]?' '+'★'.repeat(wup[cur]):''))+' · G: granaat '+gren+'/8';
