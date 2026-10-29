@@ -1065,6 +1065,22 @@ const magM=new THREE.MeshStandardMaterial({color:0x0a0610,map:MAGT,emissive:0xff
 const mkCr=(c,e)=>new THREE.MeshStandardMaterial({color:c,emissive:e,emissiveIntensity:1.1,roughness:.12,metalness:.25,flatShading:true,transparent:true,opacity:.92});
 const crM=[mkCr(0xa24dff,0x7a22ff),mkCr(0xd58cff,0x9a3cff),mkCr(0xff5cf0,0xb020c0)],spM=new THREE.MeshBasicMaterial({color:0xe8c8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false});
 // Keep every upgrade below the sights: side plates instead of crystals/orbits.
+const IRON_SIGHTS={
+ pistol:{height:.112,rear:.17,front:-.25,mount:.078},
+ smg:{height:.18,rear:.16,front:-.3,mount:.065},
+ shotgun:{height:.105,rear:.1,front:-1.1,mount:.065},
+ ak:{height:.17,rear:-.28,front:-1.2,mount:.09}
+};
+function addWeaponIronSights(k){const profile=IRON_SIGHTS[k];if(!profile)return;
+ const sight=new THREE.Group();sight.name='weaponIronSights';gun.add(sight);
+ const metal=new THREE.MeshStandardMaterial({color:0x20252c,metalness:.65,roughness:.55}),mark=new THREE.MeshBasicMaterial({color:0xdce5d7}),h=profile.height;
+ const box=(m,x,y,z,w,t,d)=>{const o=part(gB,m,x,y,z,w,t,d,sight);o.userData.ironSight=true;return o};
+ // An open rear notch frames the front post; mounts meet the weapon rail.
+ for(const x of[-.022,.022]){box(metal,x,h-.001,profile.rear,.012,.034,.02);box(mark,x,h+.012,profile.rear+.011,.008,.004,.003)}
+ box(metal,0,(profile.mount+h-.022)/2,profile.rear,.056,h-.022-profile.mount,.025);
+ box(metal,0,(profile.mount+h)/2,profile.front,.009,h-profile.mount,.014);
+ box(mark,0,h-.002,profile.front+.008,.007,.004,.003);
+}
 function addMinigunSights(){
  const sight=new THREE.Group();sight.name='minigunIronSights';gun.add(sight);
  const metal=new THREE.MeshStandardMaterial({color:0x20252c,roughness:.55,metalness:.65}),mark=new THREE.MeshBasicMaterial({color:0xdde5d8});
@@ -1077,7 +1093,7 @@ function addMinigunSights(){
  box(metal,0,.303,.02,.062,.012,.028);
  box(metal,0,.226,-1.32,.035,.20,.035);box(metal,0,.329,-1.32,.009,.022,.014);box(mark,0,.338,-1.31,.007,.004,.003);
 }
-try{const _b5=buildGun;buildGun=function(k){_b5(k);if(k==='minigun')addMinigunSights();const L=wup[k]||0;skinMats=[];gunFx=null;flashM.material.color.setHex(L?UCOL[L]:0xffcc55);gunGlow.intensity=0;if(!L)return;
+try{const _b5=buildGun;buildGun=function(k){_b5(k);if(k==='minigun')addMinigunSights();else addWeaponIronSights(k);const L=wup[k]||0;skinMats=[];gunFx=null;flashM.material.color.setHex(L?UCOL[L]:0xffcc55);gunGlow.intensity=0;if(!L)return;
  const col=new THREE.Color(UCOL[L]);gunGlow.color.copy(col);gunGlow.intensity=.25;
  gun.traverse(o=>{if(o===gun||o===flashM||!o.isMesh||o.userData.ironSight)return;const m=o.material;if(!m.isMeshStandardMaterial||m.transparent)return;const key=m.uuid+':'+L;let n=skinCache.get(key);if(!n){n=m.clone();n.color.copy(col);n.map=null;n.emissive.copy(col);n.emissiveMap=null;n.metalness=.65;n.roughness=.4;skinCache.set(key,n)}n.userData.base=.12;n.emissiveIntensity=.12;o.material=n;if(!skinMats.includes(n))skinMats.push(n)});
  const[hw,,z1,z2]=skinTB[k],trim=new THREE.MeshStandardMaterial({color:UCOL[L],emissive:UCOL[L],emissiveIntensity:.2,metalness:.65,roughness:.4});
@@ -1109,6 +1125,7 @@ function makeReloadRig(k){
  box(red,0,0,0,.025,.025,.065,shell);box(brass,0,0,.035,.027,.027,.012,shell);
  for(let i=0;i<8;i++){box(brass,-.16-i*.022,-.015+Math.sin(i*.5)*.025,.09,.015,.065,.015,belt);box(dark,-.16-i*.022,-.015,.09,.024,.012,.018,belt)}
  let cover=null;if(k==='minigun'){cover=new THREE.Group();cover.name='reloadFeedCover';cover.position.set(-.1,.115,.05);box(dark,-.04,0,0,.1,.018,.22,cover);gun.add(cover)}
+ if(k==='pistol'){const sight=gun.getObjectByName('weaponIronSights');if(sight)action.add(sight)}
  reloadRig={k,mag,action,hand,shell,belt,cover};hand.visible=shell.visible=false;belt.visible=k==='minigun';
 }
 try{const originalBuild=buildGun;buildGun=function(k){originalBuild(k);makeReloadRig(k)};buildGun(cur)}catch(e){console.warn('reload rig',e)}
@@ -1228,7 +1245,7 @@ eA.push((dt,t)=>{const c=upg.on?upg.charge:0;upFx.vig.style.opacity=upg.on&&upg.
 // loop
 let last=performance.now(),tt=0;
 function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='menu'){last=now;return}const dt=['pause','confirmLeave'].includes(state)?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
- {ads+=((adsOn&&state=='play'&&!reloading&&!sprinting?1:0)-ads)*Math.min(1,dt*12);const f=baseFov+(ZF[cur]-baseFov)*ads+upFov;if(Math.abs(f-cam.fov)>.01){cam.fov=f;cam.updateProjectionMatrix()}$('scope').style.opacity=cur=='sniper'?Math.max(0,ads*1.4-.4):0;gun.visible=!(cur=='sniper'&&ads>.75);$('cross').style.opacity=cur==='minigun'?1-ads:1-ads*.7}
+ {ads+=((adsOn&&state=='play'&&!reloading&&!sprinting?1:0)-ads)*Math.min(1,dt*12);const f=baseFov+(ZF[cur]-baseFov)*ads+upFov;if(Math.abs(f-cam.fov)>.01){cam.fov=f;cam.updateProjectionMatrix()}$('scope').style.opacity=cur=='sniper'?Math.max(0,ads*1.4-.4):0;gun.visible=!(cur=='sniper'&&ads>.75);$('cross').style.opacity=cur==='sniper'?1-ads*.7:1-ads}
  if(state=='play'){
   const s=st();if(infiniteAmmo()){ammo=s.mag;reloading=0}if(isGod()){php=100;hp=100;}movePlayer(dt,upg.on);if(!pGnd())php=Math.min(100,php+dt*10);
   cd-=dt;if(reloading>0){reloading-=dt;if(reloading<=0){reloading=0;{const t=Math.min(s.mag-ammo,rsv[cur]||0);if(t>0){ammo+=t;rsv[cur]-=t}}SFX.click()}}
@@ -1252,7 +1269,7 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
  for(const p of P){p.v.y-=18*dt;if(p.m.position.y>.06){p.m.position.addScaledVector(p.v,dt);if(p.m.position.y<=.06){p.m.position.y=.06;p.v.set(0,0,0);p.m.scale.y=.15}}p.l-=dt;if(p.l<0){scene.remove(p.m);p.dead=1}}
  for(let i=P.length-1;i>=0;i--)if(P[i].dead)P.splice(i,1);
  for(const d of D){const t=d.m.scale.x;if(t<d.s)d.m.scale.setScalar(Math.min(d.s,t+dt*d.s*.6))}
- for(let i=T.length-1;i>=0;i--){T[i].t-=dt;if(T[i].t<0){scene.remove(T[i].l);T.splice(i,1)}}kick*=.85;fl-=dt;flashM.visible=fl>0;if(upg.on)updUpg(dt);else{gun.position.set(.28*(1-ads),cur=='minigun'?-.26-.08*ads:-.26+.09*ads,-.6+kick);gun.rotation.set(0,0,0);gun.scale.setScalar(1);
+ for(let i=T.length-1;i>=0;i--){T[i].t-=dt;if(T[i].t<0){scene.remove(T[i].l);T.splice(i,1)}}kick*=.85;fl-=dt;flashM.visible=fl>0;if(upg.on)updUpg(dt);else{gun.position.set(.28*(1-ads),cur==='sniper'?-.26+.09*ads:-.26+(.26-(IRON_SIGHTS[cur]?.height??.34))*ads,-.6+kick);gun.rotation.set(0,0,0);gun.scale.setScalar(1);
  sprintBlend+=((state==='play'&&sprinting?1:0)-sprintBlend)*Math.min(1,dt*12);
  if(state==='play'&&sprinting)sprintPhase+=dt*14;
  const bob=Math.sin(sprintPhase),sway=Math.cos(sprintPhase*.5);
