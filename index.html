@@ -40,6 +40,7 @@ input[type=range]{accent-color:var(--acc);width:100%}
 #commandConsole.open{display:flex}#commandPanel{width:min(760px,100%);padding:20px;background:#0b1219;border:1px solid #42c9ae;color:#e9f4ef;font:16px monospace;box-shadow:0 0 30px #000}
 #commandPanel p{max-width:none;font:14px monospace;text-align:left;margin:10px 0;line-height:1.6}#commandOutput{max-height:180px;overflow:auto;white-space:pre-wrap;margin:12px 0;color:#8ee6ce;user-select:text}
 #commandInput{width:100%;box-sizing:border-box;background:#03080b;color:#fff;border:1px solid #42c9ae;padding:12px;font:18px monospace;outline:none}
+#ovStart{background:linear-gradient(#05090c55,#05090cdd),var(--castle-photo,none) center/cover no-repeat;text-shadow:0 2px 5px #000}#ovStart p{color:#eee6d8}#ovLeave{z-index:60}
 </style></head><body>
 <div class="hud" id="tl"><div>Kasteel <span id="hpt">100</span> HP</div><div class="bar"><i id="hpb"></i></div></div>
 <div class="hud" id="pl" style="left:16px;top:66px;width:240px;display:none"><div>Jij <span id="pht">100</span> HP</div><div class="bar"><i id="phb" style="background:#3fa84a"></i></div></div>
@@ -55,6 +56,7 @@ input[type=range]{accent-color:var(--acc);width:100%}
 <div class="ov" id="ovDone"><h1 id="doneT">Golf 1 gehaald!</h1><p>Goud: <b id="gold3" style="color:var(--acc)"></b> &middot; Beweeg de muis naar een knop om verder te gaan.</p><div id="doneBtns"><button id="bUp">Upgrades</button><button id="bNext">Volgende Golf</button><button id="bHome">Home</button></div></div>
 <div class="ov" id="ovShop"><div id="goldBar">Totaal goud: <b id="gold2"></b></div><h1 id="shT">Upgrades</h1><p>Upgrades gaan tot niveau 10 en worden steeds duurder.</p><div id="cards"></div><button id="shBack">Terug</button></div>
 <div class="ov" id="ovPause"><h1>Pauze</h1><p>Het spel staat stil. Druk op ESC of klik op de knop om verder te gaan.</p><p>W/A/S/D: lopen · Shift: sprinten (1,5×, gebruikt stamina) · Spatie: springen · Rechtermuisknop: inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen · G: granaat gooien · B: schild plaatsen (vanaf golf 35)</p><button id="resume">Verder spelen</button><button id="leaveGame">Verlaat spel</button></div>
+<div class="ov" id="ovLeave" role="dialog" aria-modal="true" aria-labelledby="leaveTitle"><h1 id="leaveTitle">Spel verlaten?</h1><div style="display:flex;gap:18px"><button id="leaveYes">Ja</button><button id="leaveNo">Nee</button></div></div>
 <div class="ov" id="ovOver"><h1 style="color:var(--red)">Het kasteel is gevallen</h1><p id="ovT"></p><button id="again">Opnieuw proberen</button></div>
 <button id="gear" title="Instellingen (O)">&#9881;</button><div class="ov" id="ovSet" style="z-index:50"><h1 style="font-size:40px">Instellingen</h1><div id="setBox"></div><p>Tip: druk tijdens het spelen op O om dit menu te openen.</p><button id="setClose">Sluiten</button></div>
 <div id="commandConsole" role="dialog" aria-modal="true" aria-labelledby="commandTitle"><div id="commandPanel"><b id="commandTitle">Sandbox commandline · spel gepauzeerd</b><p>/godmode — jij en het kasteel onsterfelijk, en vliegen (WASD, Spatie omhoog, Ctrl omlaag)<br>/maxammo — onbeperkte kogels, zonder herladen<br>/freeze — bevries alle vijanden; /freeze off hervat ze<br>/skipgolf — huidige en volgende golven leegmaken zolang dit aan staat<br>Voeg off toe om uit te zetten, bijvoorbeeld /godmode off.<br>Enter: uitvoeren · Esc: sluiten (klik in het spel om weer te richten) · Met /godmode is ook het kasteel onkwetsbaar.</p><div id="commandOutput" role="log" aria-live="polite"></div><input id="commandInput" aria-label="Sandboxcommando" placeholder="/godmode" autocomplete="off" autocapitalize="off" spellcheck="false"></div></div>
@@ -609,13 +611,47 @@ function chasePl(e,dt){if(!pGnd()||e.fly)return false;const g=e.g,o=e.o,dx=px-g.
  g.rotation.y+=(((Math.atan2(dx,dz)-g.rotation.y+9.4248)%6.2832)-3.1416)*Math.min(1,dt*10);g.position.y=bumpY(g.position,gs);o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(e.t*7)*1.1;o.aL.rotation.x=-.4;
  e.pa=(e.pa===undefined?.4:e.pa)-dt;if(e.pa<=0){e.pa=rg?(e.rt||2):e.giant?1.6:1.1;damagePlayer((e.dmg||15)*(e.boss?.5:.55));damageFeedback(.35,0,true);if(rg)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(px,cyv+1.2,pz),0xffee88)}
  return true}
-function walkTo(p,tx,tz,sp,dt,rad,step){let dx=tx-p.x,dz=tz-p.z;const d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;let ax=dx,az=dz;
- for(const o of OBS){if(o.h<=step)continue;const ox=o.x-p.x,oz=o.z-p.z,rr=o.r+rad;if(Math.abs(ox)>rr+5||Math.abs(oz)>rr+5)continue;
-  const ah=ox*dx+oz*dz;if(ah<-rr*.4||ah>rr+4.5)continue;const l=-ox*dz+oz*dx;if(Math.abs(l)>rr+.8)continue;
-  const w=(1-Math.abs(l)/(rr+.8))*(1-Math.max(0,ah)/(rr+4.5))*2.6,s=l>=0?-1:1;ax+=s*-dz*w;az+=s*dx*w}
- const n=Math.hypot(ax,az)||1;ax/=n;az/=n;p.x+=ax*sp*dt;p.z+=az*sp*dt;
- for(const o of OBS){if(o.h<=step)continue;const ox=p.x-o.x,oz=p.z-o.z,dd=Math.hypot(ox,oz),rr=(o.r+rad)*.9;if(dd<rr&&dd>.001){p.x=o.x+ox/dd*rr;p.z=o.z+oz/dd*rr}}
- return Math.atan2(ax,az)}
+// Cached routes replace local steering, which can oscillate between nearby props.
+const walkRoutes=new WeakMap();
+function clearWalkSegment(ax,az,bx,bz,rad,step){
+ const dx=bx-ax,dz=bz-az,len=dx*dx+dz*dz;
+ for(const o of OBS){if(o.h<=step)continue;const r=o.r+rad+.12;
+  if(o.x+r<Math.min(ax,bx)||o.x-r>Math.max(ax,bx)||o.z+r<Math.min(az,bz)||o.z-r>Math.max(az,bz))continue;
+  const t=len?Math.max(0,Math.min(1,((o.x-ax)*dx+(o.z-az)*dz)/len)):0;
+  if(Math.hypot(ax+t*dx-o.x,az+t*dz-o.z)<r)return false;
+ }return true;
+}
+function planWalkRoute(p,tx,tz,rad,step){
+ const cell=2,minX=Math.floor((Math.min(p.x,tx,-115)-24)/cell),maxX=Math.ceil((Math.max(p.x,tx,115)+24)/cell),minZ=Math.floor((Math.min(p.z,tz,-205)-24)/cell),maxZ=Math.ceil((Math.max(p.z,tz,15)+24)/cell);
+ const width=maxX-minX+1,height=maxZ-minZ+1,key=(x,z)=>(z-minZ)*width+x-minX,point=k=>({x:(k%width+minX)*cell,z:(Math.floor(k/width)+minZ)*cell});
+ const blocked=new Map(),free=(x,z)=>{if(x<minX||x>maxX||z<minZ||z>maxZ)return false;const k=key(x,z);if(!blocked.has(k))blocked.set(k,clearWalkSegment(x*cell,z*cell,x*cell,z*cell,rad,step));return blocked.get(k)};
+ function nearest(x,z,fromX,fromZ,connect){const cx=Math.round(x/cell),cz=Math.round(z/cell);let best=null,dist=Infinity;
+  for(let r=0;r<=8;r++){for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){if(Math.max(Math.abs(dx),Math.abs(dz))!==r)continue;const gx=cx+dx,gz=cz+dz,d=Math.hypot(gx*cell-x,gz*cell-z);if(d<dist&&free(gx,gz)&&(!connect||clearWalkSegment(fromX,fromZ,gx*cell,gz*cell,rad,step))){best=key(gx,gz);dist=d}}if(best!==null)return best}return null;
+ }
+ const start=nearest(p.x,p.z,p.x,p.z,true),goal=nearest(tx,tz,tx,tz,false);if(start===null||goal===null)return [];
+ const heap=[],cost=new Map([[start,0]]),parent=new Map(),closed=new Set(),goalPoint=point(goal);
+ function push(k,g){const q=point(k),n={k,g,f:g+Math.hypot(q.x-goalPoint.x,q.z-goalPoint.z)};let i=heap.length;heap.push(n);while(i){const j=(i-1)>>1;if(heap[j].f<=n.f)break;heap[i]=heap[j];i=j}heap[i]=n}
+ function pop(){const first=heap[0],last=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let j=i*2+1;if(j+1<heap.length&&heap[j+1].f<heap[j].f)j++;if(heap[j].f>=last.f)break;heap[i]=heap[j];i=j}heap[i]=last}return first}
+ push(start,0);
+ while(heap.length){const n=pop();if(closed.has(n.k))continue;if(n.k===goal){const route=[];for(let k=goal;k!==undefined;k=parent.get(k))route.push(point(k));route.reverse();if(clearWalkSegment(goalPoint.x,goalPoint.z,tx,tz,rad,step))route.push({x:tx,z:tz});return route}closed.add(n.k);const q=point(n.k),x=Math.round(q.x/cell),z=Math.round(q.z/cell);
+  for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){if(!dx&&!dz||!free(x+dx,z+dz))continue;const k=key(x+dx,z+dz);if(closed.has(k)||!clearWalkSegment(q.x,q.z,(x+dx)*cell,(z+dz)*cell,rad,step))continue;const g=n.g+cell*Math.hypot(dx,dz);if(g<(cost.get(k)??Infinity)){cost.set(k,g);parent.set(k,n.k);push(k,g)}}
+ }return [];
+}
+function walkTo(p,tx,tz,sp,dt,rad,step){
+ // Resolve overlapping spawn points before planning a collision-free route.
+ for(let pass=0;pass<8;pass++){let moved=false;for(const o of OBS){if(o.h<=step)continue;const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),r=o.r+rad+.14;if(d<r){p.x=o.x+(d?dx/d:1)*r;p.z=o.z+(d?dz/d:0)*r;moved=true}}if(!moved)break}
+ let target={x:tx,z:tz};
+ if(!clearWalkSegment(p.x,p.z,tx,tz,rad,step)){
+  let route=walkRoutes.get(p);
+  if(!route||Math.hypot(route.tx-tx,route.tz-tz)>2||route.count!==OBS.length||route.rad!==rad||route.step!==step||(route.points.length&&!clearWalkSegment(p.x,p.z,route.points[0].x,route.points[0].z,rad,step))){route={tx,tz,count:OBS.length,rad,step,points:planWalkRoute(p,tx,tz,rad,step)};walkRoutes.set(p,route)}
+  while(route.points.length&&Math.hypot(route.points[0].x-p.x,route.points[0].z-p.z)<.15)route.points.shift();
+  while(route.points.length>1&&clearWalkSegment(p.x,p.z,route.points[1].x,route.points[1].z,rad,step))route.points.shift();
+  if(!route.points.length)return 0;target=route.points[0];
+ }else walkRoutes.delete(p);
+ const dx=target.x-p.x,dz=target.z-p.z,d=Math.hypot(dx,dz),travel=Math.min(sp*dt,d);
+ if(d&&clearWalkSegment(p.x,p.z,p.x+dx/d*travel,p.z+dz/d*travel,rad,step)){p.x+=dx/d*travel;p.z+=dz/d*travel}
+ return Math.atan2(dx,dz);
+}
 function foe(e){const g=e.g;let best=null,bd=e.rng?(e.stop<-60?55:32):3.2*(e.giant?1.6:1);for(const a of A){if(a.state=='dead'||a.tw)continue;if(!e.rng&&a.wall)continue;const d=Math.hypot(a.g.position.x-g.position.x,a.g.position.z-g.position.z)-(a.tower?3.3:0);if(d<bd){bd=d;best=a}}return best}
 function fightAlly(e,a,dt){const g=e.g,o=e.o,q=a.g.position;face(g,q.x,q.z);o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(e.t*6)*1.1;e.atk-=dt;if(e.atk<=0){e.atk=e.rng?e.rt:1.2;a.hp-=e.dmg;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(q.x,q.y+1.2,q.z),0xffaa88);blood(new THREE.Vector3(q.x,q.y+1.2,q.z),5);SFX.hit();if(a.hp<=0){a.state='dead';a.dt=0;hideTri(a.g)}}}
 function spawnAlly(k){const o=makeEnemy(false,k),h=k==3?150:k==2?100:60,g=o.g,wall=k==4;const a={o,g,kind:k,hp:h,max:h,wall,sp:k==3?8:4.5,dmg:k==3?18:20,cd:R(),t:R()*9,state:'idle',hx:(R()-.5)*40,hz:-8-R()*4};g.position.set(wall?(R()-.5)*44:a.hx,wall?6:0,wall?-.7:a.hz);g.rotation.y=Math.PI;scene.add(g);a.bh=h;a.bd=a.dmg;allyStat(a);A.push(a);SFX.coin()}
@@ -673,7 +709,8 @@ function renderShop(){$('gold2').textContent=gold;const box=$('cards');box.inner
   specialShop(hd,add);hd('Overig');add('Granaat ('+gren+'/8)','Gooi met G · ontploft na ±1,5 s · groot bereik · 150 schade','',gren>=8?'Maximaal (8)':'Koop · 45 goud',gren>=8||gold<45,()=>{gold-=45;gren++})
  add('Kasteel repareren','+25 HP (nu '+Math.ceil(hp)+'/100)','','Repareren · 50 goud',gold<50||hp>=100,()=>{gold-=50;hp=Math.min(100,hp+25)})}
 function lock(){try{const p=ren.domElement.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}}
-function begin(){playBgm();prevBest=hs.wave;au().resume&&au().resume();$('ovStart').classList.remove('on');$('ovShop').classList.remove('on');$('ovDone').classList.remove('on');$('ovOver').classList.remove('on');state='play';topUp();lock();startWave()}
+function positionPlayerAtCastle(){px=0;py=6;pz=0;cyv=6;vy=0;grd=true;yaw=0;pitch=-Math.atan2(10-7.7,130);shake=0;resetMovement()}
+function begin(){positionPlayerAtCastle();playBgm();prevBest=hs.wave;au().resume&&au().resume();$('ovStart').classList.remove('on');$('ovShop').classList.remove('on');$('ovDone').classList.remove('on');$('ovOver').classList.remove('on');state='play';topUp();lock();startWave()}
 $('go').onclick=begin;
 function beginSandbox(){
  resetGame();sandboxMode=true;wave=59;gold=1000000;
@@ -767,7 +804,7 @@ $('again').onclick=()=>{resetGame();begin()};$('newg').onclick=()=>{resetGame();
 addEventListener('mousemove',e=>{if(state!='play')return;yaw-=e.movementX*.0022*set.sens*cam.fov/baseFov;pitch=Math.max(-1.4,Math.min(1.2,pitch-e.movementY*.0022*set.sens*cam.fov/baseFov))});
 ren.domElement.addEventListener('mousedown',e=>{if(e.button==2)adsOn=true;if(e.button==0){down=true;if(state=='play'&&!document.pointerLockElement)lock()}});
 addEventListener('mouseup',e=>{if(e.button==2)adsOn=false;else down=false});
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code=='KeyR'&&state=='play')reload();if(e.code=='KeyG')throwG();if(e.code=='Escape'&&!e.repeat){e.preventDefault();if(setOpen)closeSet();else state=='pause'?resume():pause()}if(e.code=='KeyO')setOpen?closeSet():openSet();const m=/^(Digit|Numpad)([1-6])$/.exec(e.code);if(m)sw(ORD[m[2]-1])});addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code=='KeyR'&&state=='play')reload();if(e.code=='KeyG')throwG();if(e.code=='Escape'&&!e.repeat){e.preventDefault();if(state==='confirmLeave')cancelLeave();else if(setOpen)closeSet();else state=='pause'?resume():pause()}if(e.code=='KeyO')setOpen?closeSet():openSet();const m=/^(Digit|Numpad)([1-6])$/.exec(e.code);if(m)sw(ORD[m[2]-1])});addEventListener('keyup',e=>keys[e.code]=false);
 addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)});
 const ORD=['pistol','smg','shotgun','sniper','ak','minigun'],ZF={pistol:52,smg:50,shotgun:56,sniper:18,ak:50,minigun:62};let ads=0,adsOn=false,ammoBy={},prevBest=0,hs={wave:0,kills:0};
 try{const j=JSON.parse(localStorage.getItem('kw_hs'));if(j&&j.wave)hs=j}catch(e){}
@@ -785,8 +822,10 @@ function scrollWeapon(e){
 ren.domElement.addEventListener('wheel',scrollWeapon,{passive:false});
 function pause(){if(state!='play')return;state='pause';suppressConsoleUnlock=true;clearPlayerInput();document.exitPointerLock&&document.exitPointerLock();$('ovPause').classList.add('on')}
 function resume(){if(state!='pause')return;$('ovPause').classList.remove('on');suppressConsoleUnlock=true;clearPlayerInput();state='play';last=performance.now();lock()}
-function leaveGame(){if(state!=='pause')return;saveHS();state='menu';suppressConsoleUnlock=true;document.exitPointerLock&&document.exitPointerLock();clearPlayerInput();$('ovPause').classList.remove('on');resetGame();showHS();$('ovStart').classList.add('on')}
-$('leaveGame').onclick=leaveGame;
+function leaveGame(){if(state!=='confirmLeave')return;$('ovLeave').classList.remove('on');saveHS();state='menu';suppressConsoleUnlock=true;document.exitPointerLock&&document.exitPointerLock();clearPlayerInput();$('ovPause').classList.remove('on');resetGame();showHS();$('ovStart').classList.add('on')}
+function cancelLeave(){if(state!=='confirmLeave')return;$('ovLeave').classList.remove('on');state='pause';resume()}
+$('leaveGame').onclick=()=>{if(state!=='pause')return;state='confirmLeave';$('ovPause').classList.remove('on');$('ovLeave').classList.add('on');$('leaveNo').focus()};
+$('leaveYes').onclick=leaveGame;$('leaveNo').onclick=cancelLeave;
 $('resume').onclick=resume;document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement){suppressConsoleUnlock=false;return}if(!suppressConsoleUnlock&&state=='play')pause()});
 addEventListener('contextmenu',e=>e.preventDefault());showHS();castleUp();
 const MZ=new THREE.Vector3(),UPV=new THREE.Vector3(0,1,0),tgeo=new THREE.CylinderGeometry(1,1,1,5);
@@ -1058,7 +1097,7 @@ eA.push((dt,t)=>{const c=upg.on?upg.charge:0;upFx.vig.style.opacity=upg.on&&upg.
  if(state=='play')drawTab()});
 // loop
 let last=performance.now(),tt=0;
-function frame(now){requestAnimationFrame(frame);if(state==='console'){last=now;return}const dt=state=='pause'?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
+function frame(now){requestAnimationFrame(frame);if(state==='console'){last=now;return}const dt=['pause','confirmLeave'].includes(state)?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
  {ads+=((adsOn&&state=='play'&&!reloading&&!sprinting?1:0)-ads)*Math.min(1,dt*12);const f=baseFov+(ZF[cur]-baseFov)*ads+upFov;if(Math.abs(f-cam.fov)>.01){cam.fov=f;cam.updateProjectionMatrix()}$('scope').style.opacity=cur=='sniper'?Math.max(0,ads*1.4-.4):0;gun.visible=!(cur=='sniper'&&ads>.75);$('cross').style.opacity=1-ads*.7}
  if(state=='play'){
   const s=st();if(infiniteAmmo()){ammo=s.mag;reloading=0}if(isGod()){php=100;hp=100;}if(sandboxMode&&cheats.skipgolf&&(list.length||E.some(e=>e.state!=='dead')))skipRemainingWave();movePlayer(dt,upg.on);if(!pGnd())php=Math.min(100,php+dt*10);
@@ -1093,5 +1132,7 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'){last=now;
  shake*=.88;cG.position.x*=.8;
  cam.position.set(px+(R()-.5)*shake,cyv+1.7+(R()-.5)*shake*.6,pz+(R()-.5)*shake*.4);cam.rotation.set(pitch,yaw,0);updSky(dt);XT(dt,tt);for(const f of eA)f(dt,tt);
  ren.render(scene,cam)}
+// Photograph the actual enemy castle for the main menu; no external image needed.
+{const photoCam=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,1200);photoCam.position.set(32,23,-65);photoCam.lookAt(0,10,-130);gun.visible=false;ren.render(scene,photoCam);$('ovStart').style.setProperty('--castle-photo','url("'+ren.domElement.toDataURL('image/jpeg',.9)+'")');gun.visible=true}
 requestAnimationFrame(frame);
 </script></body></html>
