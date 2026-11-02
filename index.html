@@ -53,10 +53,10 @@ input[type=range]{accent-color:var(--acc);width:100%}
 <div class="hud" id="side" style="left:0;top:174px;padding:6px 14px 6px 12px;font-size:14px;line-height:1.5;background:#000a;border-left:3px solid var(--acc);color:var(--mut)"></div>
 <div class="hud" id="streak" style="right:22px;bottom:120px;text-align:center"><svg id="stf" viewBox="0 0 24 32" width="58" height="76"><path id="stp" d="M12 1c1 6 9 10 9 19a9 9 0 0 1-18 0c0-5 3-8 5-11 1 3 2 4 4 4-1-4-1-8 0-12z" fill="#ff3b2f"/><path d="M12 14c1 3 4 5 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5 1 1 2 1 2-3z" fill="#fff" fill-opacity=".55"/></svg><div id="stx" style="font-size:36px;font-weight:700;line-height:1;color:#ff3b2f">1x</div><div class="bar" style="width:74px;margin:4px auto 0"><i id="stb" style="width:0"></i></div></div>
 <div id="scope"></div><div class="hud" id="cross"></div><div id="hm"></div><div id="flash"></div><div id="banner"></div>
-<div class="ov on" id="ovStart"><h1>Kasteelwacht</h1><p>Je staat op de muur. Het leger van het kwaadaardige kasteel aan de overkant komt eraan. Soldaten doen elke slag 10 schade aan je kasteel, reuzen 20. Vijanden blijven aanvallen tot je ze verslaat. Het kasteel heeft 5000 HP en de golven stoppen nooit.</p><p>Muis: richten · Linkermuisknop: schieten · Rechtermuisknop: richten/inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen (tijdens herladen kun je niet inzoomen) · W/A/S/D: lopen · Shift: sprinten · O of ⚙: instellingen · ESC: pauze · Kopschoten doen dubbele schade.</p><p id="hsStart" style="color:var(--acc)"></p><button id="go">Nieuw spel</button><button id="continueGame" style="display:none">Spel hervatten</button><button id="sandbox">Sandbox</button></div>
+<div class="ov on" id="ovStart"><h1>Kasteelwacht</h1><p>Je staat op de muur. Het leger van het kwaadaardige kasteel aan de overkant komt eraan. Soldaten doen elke slag 10 schade aan je kasteel, reuzen 20. Vijanden blijven aanvallen tot je ze verslaat. Het kasteel heeft 5000 HP en de golven stoppen nooit.</p><p>Muis: richten · Linkermuisknop: schieten · Rechtermuisknop: richten/inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen (tijdens herladen kun je niet inzoomen) · V: messteek · W/A/S/D: lopen · Shift: sprinten · O of ⚙: instellingen · ESC: pauze · Kopschoten doen dubbele schade.</p><p id="hsStart" style="color:var(--acc)"></p><button id="go">Nieuw spel</button><button id="continueGame" style="display:none">Spel hervatten</button><button id="sandbox">Sandbox</button></div>
 <div class="ov" id="ovDone"><h1 id="doneT">Golf 1 gehaald!</h1><p>Goud: <b id="gold3" style="color:var(--acc)"></b> &middot; Beweeg de muis naar een knop om verder te gaan.</p><div id="doneBtns"><button id="bUp">Upgrades</button><button id="bNext">Volgende Golf</button><button id="bHome">Verlaat spel</button></div></div>
 <div class="ov" id="ovShop"><div id="goldBar">Totaal goud: <b id="gold2"></b></div><h1 id="shT">Upgrades</h1><p>Upgrades gaan tot niveau 10 en worden steeds duurder.</p><div id="cards"></div><button id="shBack">Terug</button></div>
-<div class="ov" id="ovPause"><h1>Pauze</h1><p>Het spel staat stil. Druk op ESC of klik op de knop om verder te gaan.</p><p>W/A/S/D: lopen · Shift: sprinten (1,5×, gebruikt stamina) · Spatie: springen · Rechtermuisknop: inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen · G: granaat gooien · B: schild plaatsen (vanaf golf 35)</p><button id="resume">Verder spelen</button><button id="leaveGame">Verlaat spel</button></div>
+<div class="ov" id="ovPause"><h1>Pauze</h1><p>Het spel staat stil. Druk op ESC of klik op de knop om verder te gaan.</p><p>W/A/S/D: lopen · Shift: sprinten (1,5×, gebruikt stamina) · Spatie: springen · Rechtermuisknop: inzoomen · 1-6 of muiswiel: wapen wisselen · R: herladen · V: messteek · G: granaat gooien · B: schild plaatsen (vanaf golf 35)</p><button id="resume">Verder spelen</button><button id="leaveGame">Verlaat spel</button></div>
 <div class="ov" id="ovLeave" role="dialog" aria-modal="true" aria-labelledby="leaveTitle"><h1 id="leaveTitle">Spel verlaten?</h1><div style="display:flex;gap:18px"><button id="leaveYes">Ja</button><button id="leaveNo">Nee</button></div></div>
 <div class="ov" id="ovOver"><h1 style="color:var(--red)">Het kasteel is gevallen</h1><p id="ovT"></p><button id="again">Opnieuw proberen</button></div>
 <button id="gear" title="Instellingen (O)">&#9881;</button><div class="ov" id="ovSet" style="z-index:50"><h1 style="font-size:40px">Instellingen</h1><div id="setBox"></div><p>Tip: druk tijdens het spelen op O om dit menu te openen.</p><button id="setClose">Sluiten</button></div>
@@ -559,14 +559,15 @@ function updateStaminaHud(){$('staminaBar').style.width=stamina+'%';$('staminaBa
 function damageFeedback(){if(isGod()||shieldPowerTime>0)return;SFX.castle();flv=1}
 function damageCastle(amount){if(isGod()||shieldPowerTime>0)return;hp=Math.max(0,hp-amount)}
 const PLAYER_REGEN_DELAY=5,PLAYER_REGEN_RATE=10;
-let playerRegenWait=0;
-function damagePlayer(amount){if(isGod()||shieldPowerTime>0||amount<=0)return;php=Math.max(0,php-amount);playerRegenWait=PLAYER_REGEN_DELAY;if(pGnd()&&!onWall())hurtSlow=3}
+let playerRegenWait=0,criticalHealth=false,heartbeatTime=0;
+function healthVignette(dt){if(php<=10&&php>0)criticalHealth=true;if(php>40||php<=0)criticalHealth=false;heartbeatTime+=dt;const pulse=Math.pow(Math.max(0,Math.sin(heartbeatTime*Math.PI*2*1.2)),8);return criticalHealth?.4+.45*pulse:0}
+function damagePlayer(amount){if(isGod()||shieldPowerTime>0||amount<=0)return;php=Math.max(0,php-amount);playerRegenWait=PLAYER_REGEN_DELAY;if(php<=10&&php>0)criticalHealth=true;if(pGnd()&&!onWall())hurtSlow=3}
 function regeneratePlayer(dt){const healingTime=Math.max(0,dt-playerRegenWait);playerRegenWait=Math.max(0,playerRegenWait-dt);if(php>0&&php<100)php=Math.min(100,php+healingTime*PLAYER_REGEN_RATE)}
 function movementSpeed(dt,moving,locked){
  hurtSlow=Math.max(0,hurtSlow-dt);if(onWall())hurtSlow=0;if(isGod()){stamina=STAMINA_MAX;sprintExhausted=false;}
- sprinting=state==='play'&&!locked&&moving&&(keys.ShiftLeft||keys.ShiftRight)&&!sprintExhausted&&stamina>0;
+ sprinting=state==='play'&&!locked&&moving&&(keys.ShiftLeft||keys.ShiftRight)&&stamina>0;
  if(sprinting&&!isGod()){stamina=Math.max(0,stamina-STAMINA_DRAIN*dt);if(stamina<=0){sprintExhausted=true;sprinting=false}}
- else{stamina=Math.min(STAMINA_MAX,stamina+STAMINA_REGEN*dt);if(stamina>=STAMINA_MAX)sprintExhausted=false}
+ else{stamina=Math.min(STAMINA_MAX,stamina+STAMINA_REGEN*dt);if(stamina>0)sprintExhausted=false}
  updateStaminaHud();return (sprinting?1.5:1)*(hurtSlow>0&&pGnd()&&!onWall()?.7:1);
 }
 const keys={},lv={dmg:0,rate:0,reload:0,mag:0,armor:0,loot:0};
@@ -574,7 +575,7 @@ const U={dmg:{n:"Schade",d:"+25% schade per kogel",b:40},rate:{n:"Vuursnelheid",
 const st=()=>{const w=W[cur];return{dmg:25*(1+.25*lv.dmg)*w.dm*wmul(cur),int:.42*Math.pow(.87,lv.rate)*w.int,rel:2.2*Math.pow(.87,lv.reload)*w.rel,mag:Math.max(1,Math.round((8+2*lv.mag)*w.mag)),arm:1-.06*lv.armor,loot:1+.12*lv.loot}};
 const cost=k=>Math.round(U[k].b*Math.pow(1.5,lv[k]));
 function banner(t){const b=$('banner');b.textContent=t;b.style.opacity=1;setTimeout(()=>b.style.opacity=0,2200)}
-function startWave(){wave++;php=100;playerRegenWait=0;resetMovement();noodAmmo();saveHS();showHS();applyEra();const n=Math.floor(6+wave*3.5);list=[];for(let i=0;i<n;i++){const r=R();list.push(wave>=3&&r<.1+wave*.01?1:wave>=3&&r<.28?7:wave>=5&&r<.4?8:0)}if(wave%10==0){const bs=wave>=50?[9,10,11]:[9+((wave/10-1)%3)];bs.forEach((b,i)=>list.splice(Math.floor(list.length*(.5+i*.1)),0,b))}if(wave>=25){for(let i=0;i<list.length;i++)if(list[i]==8)list[i]=0;const nd=Math.min(12,4+Math.floor((wave-25)/4));for(let i=0;i<nd;i++)list.splice(Math.floor(R()*(list.length+1)),0,8)}
+function startWave(){knifeTime=0;knifeView.visible=false;criticalHealth=false;wave++;php=100;playerRegenWait=0;resetMovement();noodAmmo();saveHS();showHS();applyEra();const n=Math.floor(6+wave*3.5);list=[];for(let i=0;i<n;i++){const r=R();list.push(wave>=3&&r<.1+wave*.01?1:wave>=3&&r<.28?7:wave>=5&&r<.4?8:0)}if(wave%10==0){const bs=wave>=50?[9,10,11]:[9+((wave/10-1)%3)];bs.forEach((b,i)=>list.splice(Math.floor(list.length*(.5+i*.1)),0,b))}if(wave>=25){for(let i=0;i<list.length;i++)if(list[i]==8)list[i]=0;const nd=Math.min(12,4+Math.floor((wave-25)/4));for(let i=0;i<nd;i++)list.splice(Math.floor(R()*(list.length+1)),0,8)}
 if(wave>=45){const nf=Math.min(16,3+Math.floor((wave-45)/2));for(let i=0;i<nf;i++)list.splice(Math.floor(R()*(list.length+1)),0,13)}
 {const r=R(),ng=r<.5?0:r<.85?1:2;for(let i=0;i<ng;i++)list.splice(Math.floor(R()*list.length),0,12)}spawnT=1;banner('Golf '+wave+({3:' · paardenruiters en reuzen',15:' · reus te koop',20:' · ridderleiders te koop',30:' · toren te koop',45:' · snelle springers!',5:' · vliegtuigen · de bomen worden kaal',10:' · monsters!',20:' · de lucht kleurt rood',25:' · rode draken en groene monsters!',35:' · een vulkaan rijst op · schildbel te koop',40:' · droogte: de natuur verdort',50:' · de rivier en meren worden lava',55:' · vulkaan vuurt! Schiet de vuurballen kapot'}[wave]||'')+(wave%10==0?' · EINDBAAS!':''));SFX.horn();$('wv').textContent=(sandboxMode?'Sandbox · golf ':'Golf ')+wave}
 const BN=['Igorovich','Double D','Mr.Vibe'],BLK=[{cloth:0xe3d3ab,skin:0xe8b890,hair:0x7a5a38},{cloth:0x4a5a48,skin:0xe8c0a0,hair:0x4a3524},{cloth:0x121212,skin:0xd9a074,hair:0x141414}];
@@ -708,7 +709,7 @@ const magOf=k=>k==cur?ammo:(ammoBy[k]||0);
 function topUp(){if(infiniteAmmo()){ammo=st().mag;return}const t=Math.min(st().mag-ammo,rsv[cur]||0);if(t>0){ammo+=t;rsv[cur]-=t}}
 function initAmmo(){rsv={pistol:32};ammoBy={};ammo=st().mag}
 function noodAmmo(){const h=(rsv.pistol||0)+magOf('pistol');if(h<8)rsv.pistol=(rsv.pistol||0)+8-h}
-function reload(){if(infiniteAmmo())return;if(upg.on||reloading||ammo>=st().mag||!(rsv[cur]>0))return;reloading=reloadDuration=st().rel;reloadMissing=Math.min(st().mag-ammo,rsv[cur]);SFX.click()}
+function reload(){if(infiniteAmmo())return;if(knifeTime>0||upg.on||reloading||ammo>=st().mag||!(rsv[cur]>0))return;reloading=reloadDuration=st().rel;reloadMissing=Math.min(st().mag-ammo,rsv[cur]);SFX.click()}
 
 const fireballs=[],fireballGeo=new THREE.SphereGeometry(1.8,12,10),fireballMat=new THREE.MeshBasicMaterial({color:0xff6418});
 let volcanoTimer=4;
@@ -730,11 +731,23 @@ function resolveEnemyHit(hit){
  if(!head&&!enemy.fly&&enemy.o.b){const p=enemy.o.b.worldToLocal(hit.point.clone());head=Math.abs(p.x)<=.4&&p.y>=1.62&&p.y<=2.65&&Math.abs(p.z)<=.46}
  return {enemy,head};
 }
-function shoot(){scene.updateMatrixWorld(true);const s=st();if(!infiniteAmmo())ammo--;cd=s.int;kick=.14;fl=.05;SFX.shot();const w=W[cur];for(let i=0;i<w.pel;i++){ray.setFromCamera({x:(R()-.5)*w.spr*(1-.6*ads),y:(R()-.5)*w.spr*(1-.6*ads)},cam);
- const h=ray.intersectObjects(E.filter(e=>e.state!='dead').map(e=>e.g).concat(fireballs.map(f=>f.m)),true).find(hit=>hit.object.userData.fireball||resolveEnemyHit(hit));
- {const o_=ray.ray.origin,d_=ray.ray.direction;let L_=160;if(d_.y<0)L_=Math.min(L_,-o_.y/d_.y);if(h)L_=Math.min(L_,h.distance);flashM.getWorldPosition(MZ);tracer2(MZ,o_.clone().addScaledVector(d_,L_),wup[cur]?UCOL[wup[cur]]:cur=='sniper'?0xffffff:0xffd870,(cur=='sniper'?.05:.03)*(wup[cur]?1.6:1))}
+// A one-second melee action, available with every firearm.
+const KNIFE_DAMAGE=40,KNIFE_RANGE=3.2;
+let knifeTime=0,knifeHit=false;
+const knifeView=new THREE.Group();cam.add(knifeView);knifeView.visible=false;
+part(gB,mk(0x30251d),0,-.09,0,.065,.2,.07,knifeView);
+part(gB,mk(0x999da4),0,.025,0,.16,.025,.08,knifeView);
+const knifeBlade=part(gB,mk(0xd8dce2),0,.23,0,.06,.38,.018,knifeView);knifeBlade.rotation.z=-.08;
+function startKnife(){if(state!=='play'||knifeTime>0||upg.on)return;knifeTime=1;knifeHit=false;adsOn=false;ads=0;down=false;reloading=0;fl=0}
+function knifeStrike(){scene.updateMatrixWorld(true);const origin=new THREE.Vector3(),forward=new THREE.Vector3();cam.getWorldPosition(origin);cam.getWorldDirection(forward);let target=null,best=KNIFE_RANGE;
+ for(const e of E){if(e.state==='dead')continue;const center=new THREE.Vector3(e.g.position.x,e.g.position.y+(e.fly?0:1.2*e.g.scale.y),e.g.position.z),offset=center.sub(origin),distance=offset.length();if(distance<best&&offset.normalize().dot(forward)>.65){target=e;best=distance}}
+ if(target){target.hp-=KNIFE_DAMAGE;hmv=1;SFX.hit();blood(target.g.position.clone().add(new THREE.Vector3(0,1,0)),12,1,target.fly?fm:bm);if(target.hp<=0)kill(target,false)}}
+function animateKnife(dt){if(knifeTime<=0){knifeView.visible=false;return}const elapsed=1-knifeTime;knifeTime=Math.max(0,knifeTime-dt);if(!knifeHit&&knifeTime<=.6){knifeHit=true;if(state==='play')knifeStrike()}const swing=Math.sin(Math.max(0,Math.min(1,(elapsed-.15)/.65))*Math.PI);knifeView.visible=knifeTime>0&&elapsed>=.15&&elapsed<.85;knifeView.position.set(.45-swing*.8,-.42+swing*.2,-.65);knifeView.rotation.set(-.4+swing*.5,.3,-.8+swing*2);gun.position.y-=Math.sin(elapsed*Math.PI)*.8;gun.visible=knifeTime<=0||elapsed<.15||elapsed>=.85}
+function shoot(){if(knifeTime>0)return;scene.updateMatrixWorld(true);const s=st();if(!infiniteAmmo())ammo--;cd=s.int;kick=.14;fl=.05;SFX.shot();const w=W[cur];for(let i=0;i<w.pel;i++){ray.setFromCamera({x:(R()-.5)*w.spr*(1-.6*ads),y:(R()-.5)*w.spr*(1-.6*ads)},cam);
+ const targets=[],seen=new Set();for(const hit of ray.intersectObjects(E.filter(e=>e.state!='dead').map(e=>e.g).concat(fireballs.map(f=>f.m)),true)){if(hit.object.userData.fireball){if(!targets.length)targets.push(hit);break}const resolved=resolveEnemyHit(hit);if(!resolved||seen.has(resolved.enemy))continue;seen.add(resolved.enemy);targets.push(hit);if(targets.length>=(cur==='pistol'?2:1))break}const h=targets[0];
+ {const o_=ray.ray.origin,d_=ray.ray.direction;let L_=160;if(d_.y<0)L_=Math.min(L_,-o_.y/d_.y);if(h)L_=Math.min(L_,targets[targets.length-1].distance);flashM.getWorldPosition(MZ);tracer2(MZ,o_.clone().addScaledVector(d_,L_),wup[cur]?UCOL[wup[cur]]:cur=='sniper'?0xffffff:0xffd870,(cur=='sniper'?.05:.03)*(wup[cur]?1.6:1))}
  if(h&&h.object.userData.fireball){const f=h.object.userData.fireball;f.hp-=s.dmg;SFX.hit();hmv=1;blood(h.point,8,1,fm);if(f.hp<=0){blood(f.m.position,24,2,fm);removeFireball(f)}continue}
- if(h){const {enemy:e,head:hd}=resolveEnemyHit(h);e.hp-=s.dmg*(hd?2:1);blood(h.point,hd?16:9,1,e.fly?fm:bm);SFX.hit();hmv=1;if(!e.giant&&!enemiesFrozen())e.g.position.z-=.15;if(e.hp<=0)kill(e,hd)}
+ for(let j=0;j<targets.length;j++){const hit=targets[j],{enemy:e,head:hd}=resolveEnemyHit(hit);e.hp-=s.dmg*(hd?2:1)*(j===0?1:.75);blood(hit.point,hd?16:9,1,e.fly?fm:bm);SFX.hit();hmv=1;if(!e.giant&&!enemiesFrozen())e.g.position.z-=.15;if(e.hp<=0)kill(e,hd)}
  }if(ammo<=0)reload()}
 function endWave(){clearFireballs();state='shop';gold+=20+wave*8;for(const a of A)if(a.state!='dead')a.hp=a.max;down=false;adsOn=false;document.exitPointerLock&&document.exitPointerLock();showDone()}
 let mX=innerWidth/2,mY=innerHeight/2;
@@ -843,18 +856,18 @@ function specialShop(hd,add){const nx=wave+1,cn=k=>A.filter(a=>a.kind==k&&a.stat
  else {const capped=!sandboxMode&&(shStock>=1||shOn),waiting=!sandboxMode&&wave<shNextBuyWave;
  add('Schildbel (voorraad '+shStock+')','Plaats met B · beschermt je basis 30 s · normale modus: max. 1 op voorraad en na gebruik 3 golven wachten','',capped?'Al in voorraad of actief':waiting?'Wacht nog '+(shNextBuyWave-wave)+' golven':'Koop · 750 goud',gold<750||capped||waiting,()=>{if(gold<750||(!sandboxMode&&(shStock>=1||shOn||wave<shNextBuyWave)))return;gold-=750;shStock++})}}
 
-function resetGame(){clearShieldPowerups();flying=false;lastSpaceTap=-Infinity;for(const k in cheats)cheats[k]=false;$('commandConsole').classList.remove('open');$('commandOutput').textContent='';sandboxMode=false;resetMovement();suspendedState=null;updateContinueButton();for(const e of E)scene.remove(e.g);E.length=0;for(const a of A){scene.remove(a.g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}}A.length=0;shStock=0;shNextBuyWave=0;clearFireballs();shOn=0;shM.visible=shW.visible=false;for(const b of B)scene.remove(b.m);B.length=0;for(const p of P)scene.remove(p.m);P.length=0;for(const d of D)scene.remove(d.m);D.length=0;wave=0;gold=0;hp=CASTLE_MAX_HP;php=100;playerRegenWait=0;kills=0;for(const k in lv)lv[k]=0;gren=0;streak=0;streakT=0;for(const k in alv)alv[k]=0;for(const k in owned)delete owned[k];for(const k in wup)delete wup[k];upg.on=0;px=0;py=6;pz=0;vy=0;grd=true;cyv=6;owned.pistol=1;cur='pistol';buildGun('pistol');initAmmo();castleUp();applyEra()}
+function resetGame(){knifeTime=0;knifeHit=false;knifeView.visible=false;criticalHealth=false;heartbeatTime=0;clearShieldPowerups();flying=false;lastSpaceTap=-Infinity;for(const k in cheats)cheats[k]=false;$('commandConsole').classList.remove('open');$('commandOutput').textContent='';sandboxMode=false;resetMovement();suspendedState=null;updateContinueButton();for(const e of E)scene.remove(e.g);E.length=0;for(const a of A){scene.remove(a.g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}}A.length=0;shStock=0;shNextBuyWave=0;clearFireballs();shOn=0;shM.visible=shW.visible=false;for(const b of B)scene.remove(b.m);B.length=0;for(const p of P)scene.remove(p.m);P.length=0;for(const d of D)scene.remove(d.m);D.length=0;wave=0;gold=0;hp=CASTLE_MAX_HP;php=100;playerRegenWait=0;kills=0;for(const k in lv)lv[k]=0;gren=0;streak=0;streakT=0;for(const k in alv)alv[k]=0;for(const k in owned)delete owned[k];for(const k in wup)delete wup[k];upg.on=0;px=0;py=6;pz=0;vy=0;grd=true;cyv=6;owned.pistol=1;cur='pistol';buildGun('pistol');initAmmo();castleUp();applyEra()}
 $('again').onclick=()=>{resetGame();begin()};
 addEventListener('mousemove',e=>{if(state!='play')return;yaw-=e.movementX*.0022*set.sens*cam.fov/baseFov;pitch=Math.max(-1.4,Math.min(1.2,pitch-e.movementY*.0022*set.sens*cam.fov/baseFov))});
 ren.domElement.addEventListener('mousedown',e=>{if(e.button==2)adsOn=true;if(e.button==0){down=true;if(state=='play'&&!document.pointerLockElement)lock()}});
 addEventListener('mouseup',e=>{if(e.button==2)adsOn=false;else down=false});
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code=='KeyR'&&state=='play')reload();if(e.code=='KeyG')throwG();if(e.code=='Escape'&&!e.repeat){e.preventDefault();if(state==='confirmLeave')cancelLeave();else if(setOpen)closeSet();else if(state==='shop'&&$('ovShop').classList.contains('on'))showDone();else state=='pause'?resume():pause()}if(e.code=='KeyO')setOpen?closeSet():openSet();const m=/^(Digit|Numpad)([1-6])$/.exec(e.code);if(m)sw(ORD[m[2]-1])});addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyV'&&!e.repeat)startKnife();if(e.code=='KeyR'&&state=='play')reload();if(e.code=='KeyG')throwG();if(e.code=='Escape'&&!e.repeat){e.preventDefault();if(state==='confirmLeave')cancelLeave();else if(setOpen)closeSet();else if(state==='shop'&&$('ovShop').classList.contains('on'))showDone();else state=='pause'?resume():pause()}if(e.code=='KeyO')setOpen?closeSet():openSet();const m=/^(Digit|Numpad)([1-6])$/.exec(e.code);if(m)sw(ORD[m[2]-1])});addEventListener('keyup',e=>keys[e.code]=false);
 addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)});
 const ORD=['pistol','smg','shotgun','sniper','ak','minigun'],ZF={pistol:52,smg:50,shotgun:56,sniper:18,ak:50,minigun:62};let ads=0,adsOn=false,ammoBy={},prevBest=0,hs={wave:0,kills:0};
 try{const j=JSON.parse(localStorage.getItem('kw_hs'));if(j&&j.wave)hs=j}catch(e){}
 function saveHS(){if(sandboxMode)return;if(wave>hs.wave||(wave==hs.wave&&kills>hs.kills)){hs={wave,kills};try{localStorage.setItem('kw_hs',JSON.stringify(hs))}catch(e){}}}
 function showHS(){$('hs').textContent=hs.wave;$('hsStart').textContent=hs.wave?'Record: golf '+hs.wave+' · '+hs.kills+' vijanden verslagen':''}
-function sw(k){if(upg.on||state!='play'||cur==k||!owned[k])return;ammoBy[cur]=ammo;cur=k;buildGun(k);ammo=infiniteAmmo()?st().mag:Math.min(ammoBy[k]||0,st().mag);reloading=0;SFX.click();if(ammo<=0)reload()}
+function sw(k){if(knifeTime>0||upg.on||state!='play'||cur==k||!owned[k])return;ammoBy[cur]=ammo;cur=k;buildGun(k);ammo=infiniteAmmo()?st().mag:Math.min(ammoBy[k]||0,st().mag);reloading=0;SFX.click();if(ammo<=0)reload()}
 let lastWeaponScroll=-Infinity;
 function scrollWeapon(e){
  if(state!=='play'||upg.on||!e.deltaY)return;
@@ -1030,7 +1043,7 @@ const TRL=[],trG=new THREE.SphereGeometry(.06,6,5),trM=[0xd58cff,0x34e8ff,0xffff
 function spark(p,v,m){const o=new THREE.Mesh(trG,trM[m!==undefined?m:R()*3|0]);o.position.copy(p);o.frustumCulled=false;scene.add(o);TRL.push({o,l:.6,v:v||new THREE.Vector3((R()-.5)*.6,(R()-.5)*.6,(R()-.5)*.6)})}
 // prompt
 const mpr=document.createElement('div');mpr.style.cssText='position:fixed;left:50%;bottom:20%;transform:translateX(-50%);text-align:center;font-size:22px;padding:10px 20px;background:rgba(12,6,26,.8);border:1px solid #b04cff;color:#ecdcff;box-shadow:0 0 18px #9a3cff;pointer-events:none;display:none;z-index:3';document.body.appendChild(mpr);
-function tryUpg(){if(state!='play'||upg.on||px<21.5||!owned[cur]||!onWall())return;if((!sandboxMode&&wave<=UPG_WAVE)){banner('Upgrade-machine ontgrendelt na golf '+UPG_WAVE);tone(150,.2,'square',.1,-50);return}const l=wup[cur]||0;if(l>=3){banner('Dit wapen is al op maximaal niveau');return}const c=UCOST[l];if(gold<c){banner('Te weinig goud: '+c+' nodig');tone(150,.2,'square',.1,-50);return}
+function tryUpg(){if(knifeTime>0||state!='play'||upg.on||px<21.5||!owned[cur]||!onWall())return;if((!sandboxMode&&wave<=UPG_WAVE)){banner('Upgrade-machine ontgrendelt na golf '+UPG_WAVE);tone(150,.2,'square',.1,-50);return}const l=wup[cur]||0;if(l>=3){banner('Dit wapen is al op maximaal niveau');return}const c=UCOST[l];if(gold<c){banner('Te weinig goud: '+c+' nodig');tone(150,.2,'square',.1,-50);return}
  gold-=c;upg.on=1;upg.t=0;upg.k=cur;upg.phase=0;upg.applied=0;upg.charge=0;ringFx(0x34e8ff,.7,8);down=false;adsOn=false;reloading=0;tone(220,.9,'sawtooth',.14,700);noise(.5,.25,900)}
 addEventListener('keydown',e=>{if(e.code=='KeyE')tryUpg()});
 const UPG_WAVE=10;let upFov=0;
@@ -1310,8 +1323,8 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
  const bob=Math.sin(sprintPhase),sway=Math.cos(sprintPhase*.5);
  gun.position.x+=sprintBlend*(.12+sway*.035);gun.position.y+=sprintBlend*(-.13+Math.abs(bob)*.055);gun.position.z+=sprintBlend*.1;
  gun.rotation.x+=sprintBlend*(-.32+bob*.075);gun.rotation.y+=sprintBlend*.35;gun.rotation.z+=sprintBlend*(.3+sway*.055)}
- if(!upg.on)animateWeaponReload();
- hmv=Math.max(0,hmv-dt*5);$('hm').style.opacity=hmv;flv=Math.max(0,flv-dt*2.5);$('flash').style.opacity=flv;
+ if(!upg.on)animateWeaponReload();animateKnife(dt);
+ hmv=Math.max(0,hmv-dt*5);$('hm').style.opacity=hmv;flv=Math.max(0,flv-dt*2.5);$('flash').style.opacity=Math.max(flv,healthVignette(dt));
  shake*=.88;cG.position.x*=.8;
  cam.position.set(px+(R()-.5)*shake,cyv+1.7+(R()-.5)*shake*.6,pz+(R()-.5)*shake*.4);cam.rotation.set(pitch,yaw,0);updSky(dt);XT(dt,tt);for(const f of eA)f(dt,tt);
  ren.render(scene,cam)}
