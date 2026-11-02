@@ -631,6 +631,7 @@ function hideTri(g){for(const c of g.children)if(c.userData.tri)c.visible=false}
 // Shared geometry/materials; each enemy owns only its bar transforms.
 const enemyHpGeometry=new THREE.PlaneGeometry(1,1),enemyHpRed=new THREE.MeshBasicMaterial({color:0xff3030,side:THREE.DoubleSide,fog:false,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}),enemyHpBack=new THREE.MeshBasicMaterial({color:0x260606,side:THREE.DoubleSide,fog:false,transparent:true,depthTest:false,depthWrite:false,toneMapped:false});
 function configureEnemyCombat(e){
+ e.moveSpeedMultiplier=e.boss?.7:.8;e.sp*=e.moveSpeedMultiplier;
  e.playerDmg=e.boss?100:e.fast?10:e.giant?50:e.horse?25:e.gold?5.5:e.rng?e.dmg*.55:10;
  e.dmg=e.boss?200:e.fast?10:e.giant?100:e.horse?20:e.dmg;
  const rate=e.fast?.5:e.giant&&!e.boss?2:1;if(e.atk!==undefined)e.atk*=rate;
@@ -673,7 +674,7 @@ function castleOld(){if(cUp)cG.remove(cUp);cUp=new THREE.Group();cG.add(cUp);con
  if(L>=9){P(cyl(3.2,14),sn,0,19,19);P(gC,rf,0,28.5,19,4.2,5,4.2);P(gB,dk,0,33,19,.25,4,.25);P(gB,bl,1.4,34,19,2.6,1.5,.1)}
  if(L>=10){for(const x of[-22,22]){P(cyl(2.6,13),sn,x,6.5,14);P(gC,rf,x,15.3,14,3.6,4.5,3.6);P(gS,gd,x,17.8,14,.7,.7,.7)}P(gS,gd,0,31,19,.9,.9,.9);P(gB,gd,0,6,10.7,6,.3,.2)}}
 const alv={2:0,3:0,4:0},MAXA={2:15,3:15,4:10},AU={2:80,3:120,4:100};let gren=0;
-function allyStat(a){const l=alv[a.kind],r=a.max?a.hp/a.max:1,kn=a.kind!=4;a.max=kn?a.bh+10*l:Math.round(a.bh*(1+.25*l));a.hp=Math.max(1,a.max*r);a.dmg=a.bd*(kn?1+.1*l:1+.2*l)}
+function allyStat(a){const l=alv[a.kind],r=a.max?a.hp/a.max:1,kn=a.kind!=4;a.max=kn?a.bh+10*l:Math.round(a.bh*(1+.25*l));a.hp=Math.max(1,a.max*r);a.dmg=a.bd*(kn?1+.1*l:1+.4*l)}
 const AL={2:{n:'Ridder',d:'100 HP · vecht in de buurt van de muur',price:120},3:{n:'Ruiter te paard',d:'150 HP · snel, valt vijanden aan',price:200},4:{n:'Schutter',d:'20 schade per schot · M14 · staat op de muur · max 10',price:160}};
 const face=(g,x,z)=>{g.rotation.y=Math.atan2(x-g.position.x,z-g.position.z)};
 function gait(o,t,k){const w=Math.sin(t*k)*.8;o.lL.rotation.x=w;o.lR.rotation.x=-w;o.aL.rotation.x=-w*.7;o.aR.rotation.x=w*.5-.5;o.b.position.y=o.off+Math.abs(Math.sin(t*k))*.06;if(o.hl)o.hl.forEach((l,i)=>l.rotation.x=(i%2?-w:w)*.9)}
@@ -899,7 +900,7 @@ function renderShop(){$('gold2').textContent=goldText();const box=$('cards');box
  hd('Wapens');for(const k in W){const w=W[k],o=owned[k];add(w.n,w.d+'<br><small>'+wstat(k)+'</small>'+(o?'':'<br>Incl. volle munitie ('+weaponReserveMax(k)+' reserve)'),'',o?'In gebruik':'Koop · '+w.price+' goud',!!o||gold<w.price,()=>{ammoBy[cur]=ammo;if(!o){gold-=w.price;owned[k]=1;}cur=k;buildGun(k);if(!o){rsv[k]=weaponReserveMax(k);ammoBy[k]=st().mag}ammo=Math.min(ammoBy[k]||0,st().mag);reloading=0})}
   hd('Munitie');for(const k of ORD){const a=AMO[k],o=owned[k],r=rsv[k]||0,mx=weaponReserveMax(k),pk=weaponAmmoPack(k),vol=r>=mx;add(a.n,'+'+pk+' kogels · reserve: '+r+' / '+mx+(o?'':' · koop eerst dit wapen'),'',!o?'Wapen niet gekocht':vol?'Voorraad vol':'Koop · '+a.pr+' goud',!o||vol||gold<a.pr,()=>{gold-=a.pr;rsv[k]=Math.min(mx,r+pk)});const card=box.lastElementChild,count=Math.min(Math.ceil((mx-r)/pk),Math.floor(gold/a.pr)),maxButton=document.createElement('button');maxButton.textContent=count?'Koop maximaal · +'+Math.min(mx-r,count*pk)+' kogels · '+count*a.pr+' goud':'Koop maximaal';maxButton.disabled=!o||count<=0;maxButton.onclick=()=>{if(!owned[k])return;const n=Math.min(Math.ceil((mx-(rsv[k]||0))/pk),Math.floor(gold/a.pr));if(n<=0)return;gold-=n*a.pr;rsv[k]=Math.min(mx,(rsv[k]||0)+n*pk);SFX.coin();renderShop()};card.append(maxButton)}
    hd('Bondgenoten');for(const k in AL){const c=AL[k],n=A.filter(a=>a.kind==k&&a.state!='dead').length,mx=MAXA[k],pr=Math.round(c.price*Math.pow(k==4?1.25:1.12,n));add(c.n+' ('+n+'/'+mx+')',c.d+' · blijft bij elke golf','',n>=mx?'Maximaal ('+mx+')':'Koop · '+pr+' goud',n>=mx||gold<pr,()=>{gold-=pr;spawnAlly(+k)})}
-  hd('Bondgenoten upgraden (tot niveau 10)');for(const k of[2,3,4]){const l=alv[k],c=Math.round(AU[k]*Math.pow(1.45,l));add(AL[k].n+' upgrade · niveau '+l,(k==4?'+25% HP en +20% schade per niveau, voor alle bondgenoten van dit type':'+10 HP en +10% kracht per niveau, voor alle bondgenoten van dit type'),'●'.repeat(l)+'○'.repeat(10-l),l>=10?'Maximaal':'Upgrade · '+c+' goud',l>=10||gold<c,()=>{gold-=c;alv[k]++;for(const a of A)if(a.kind==k)allyStat(a)})}
+  hd('Bondgenoten upgraden (tot niveau 10)');for(const k of[2,3,4]){const l=alv[k],c=Math.round(AU[k]*Math.pow(1.45,l));add(AL[k].n+' upgrade · niveau '+l,(k==4?'+25% HP en +40% schade per niveau, voor alle bondgenoten van dit type':'+10 HP en +10% kracht per niveau, voor alle bondgenoten van dit type'),'●'.repeat(l)+'○'.repeat(10-l),l>=10?'Maximaal':'Upgrade · '+c+' goud',l>=10||gold<c,()=>{gold-=c;alv[k]++;for(const a of A)if(a.kind==k)allyStat(a)})}
   specialShop(hd,add);hd('Overig');add('Granaat ('+gren+'/8)','Gooi met G · ontploft na ±1,5 s · groot bereik · 150 schade','',gren>=8?'Maximaal (8)':'Koop · 45 goud',gren>=8||gold<45,()=>{gold-=45;gren++})
  add('Kasteel repareren','+25 HP (nu '+Math.ceil(hp)+'/'+CASTLE_MAX_HP+')','','Repareren · 50 goud',gold<50||hp>=CASTLE_MAX_HP,()=>{gold-=50;hp=Math.min(CASTLE_MAX_HP,hp+25)})}
 function lock(){try{const p=ren.domElement.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}}
@@ -946,7 +947,7 @@ function enemyDetail(o,giant,kind){const b=o.b,M=(c,m)=>new THREE.MeshStandardMa
 function spawnFast(){const o=makeEnemy(false,0),g=o.g;g.traverse(x=>{if(x.isMesh&&!x.userData.tri)x.material=FASTM});
  const sx=(R()<.5?-1:1)*(10+R()*22),e={o,g,giant:false,fast:true,rng:false,rt:2,horse:false,hp:80,sp:11+R()*2,dmg:20,stop:-2.7-R()*3.5,state:'walk',t:R()*9,atk:R(),leap:1,lt:0};
  fastDetail(o,g);g.position.set(sx,0,-192);g.userData.e=e;scene.add(g);prepareEnemy(e);E.push(e);tone(320,.6,'sawtooth',.08,400)}
-function leapUpd(e,dt){const g=e.g,o=e.o;e.lt+=dt;const u=Math.min(1,e.lt/2.6);g.position.z=-192+92*u;g.position.y=Math.sin(u*Math.PI)*58;g.rotation.y=0;g.rotation.x=-.35*Math.cos(u*Math.PI);o.aL.rotation.x=o.aR.rotation.x=-2.3;o.lL.rotation.x=.6;o.lR.rotation.x=-.6;if(u>=1){e.leap=0;g.position.y=0;g.rotation.x=0}}
+function leapUpd(e,dt){const g=e.g,o=e.o;e.lt+=dt*e.moveSpeedMultiplier;const u=Math.min(1,e.lt/2.6);g.position.z=-192+92*u;g.position.y=Math.sin(u*Math.PI)*58;g.rotation.y=0;g.rotation.x=-.35*Math.cos(u*Math.PI);o.aL.rotation.x=o.aR.rotation.x=-2.3;o.lL.rotation.x=.6;o.lR.rotation.x=-.6;if(u>=1){e.leap=0;g.position.y=0;g.rotation.x=0}}
 const GOLDM=mk(0xd4a843);
 function spawnSpecial(k){const big=k==5,o=makeEnemy(big,2),g=o.g,h=big?250:200,dm=big?100:50;
  if(big)g.scale.setScalar(1.8);else{g.scale.setScalar(1.25);part(gC,GOLDM,0,2.55,0,.16,.35,.16,g)}
