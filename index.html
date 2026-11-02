@@ -588,9 +588,9 @@ function movementSpeed(dt,moving,locked){
  updateStaminaHud();return (sprinting?1.5:1)*(hurtSlow>0&&pGnd()&&!onWall()?.7:1);
 }
 const keys={},lv={dmg:0,rate:0,reload:0,mag:0,armor:0,loot:0};
-const U={dmg:{n:"Schade",d:"+25% schade per kogel",b:40},rate:{n:"Vuursnelheid",d:"Sneller achter elkaar schieten",b:40},reload:{n:"Herlaadsnelheid",d:"Kortere herlaadtijd",b:30},mag:{n:"Magazijn",d:"+2 kogels per niveau",b:30},armor:{n:"Kasteel upgraden",d:"6% minder schade · kasteel groeit en verandert",b:50},loot:{n:"Buit",d:"+12% goud per kill",b:60}};
-const st=()=>{const w=W[cur];return{dmg:25*(1+.25*lv.dmg)*w.dm*wmul(cur),int:.42*Math.pow(.87,lv.rate)*w.int,rel:2.2*Math.pow(.87,lv.reload)*w.rel,mag:weaponMagazine(cur),arm:1-.06*lv.armor,loot:1+.12*lv.loot}};
-const cost=k=>Math.round(U[k].b*Math.pow(1.5,lv[k]));
+const U={dmg:{n:"Schade",d:"+5% schade per kogel per niveau",b:40},rate:{n:"Vuursnelheid",d:"+5% vuursnelheid per niveau",b:40},reload:{n:"Herlaadsnelheid",d:"+5% herlaadsnelheid per niveau",b:30},mag:{n:"Magazijn",d:"+2 kogels per niveau",b:30},armor:{n:"Kasteel upgraden",d:"6% minder schade · kasteel groeit en verandert",b:50},loot:{n:"Buit",d:"+5% goud per kill per niveau",b:60}};
+const st=()=>{const w=W[cur];return{dmg:25*(1+.05*lv.dmg)*w.dm*wmul(cur),int:.42*w.int/(1+.05*lv.rate),rel:2.2*w.rel/(1+.05*lv.reload),mag:weaponMagazine(cur),arm:1-.06*lv.armor,loot:1+.05*lv.loot}};
+const cost=k=>Math.round(U[k].b*Math.pow(1.5,lv[k]))*(['dmg','loot','rate','reload'].includes(k)?2:1);
 function banner(t){const b=$('banner');b.textContent=t;b.style.opacity=1;setTimeout(()=>b.style.opacity=0,2200)}
 function rollGoldSpawn(random=Math.random){return random()<.25}
 function startWave(){goldSpawnedThisWave=false;knifeTime=0;knifeView.visible=false;criticalHealth=false;wave++;php=100;playerRegenWait=0;resetMovement();noodAmmo();saveHS();showHS();applyEra();const n=Math.floor(6+wave*3.5);list=[];for(let i=0;i<n;i++){const r=R();list.push(wave>=3&&r<.1+wave*.01?1:wave>=3&&r<.28?7:0)}if(wave%10==0){const bs=wave>=50?[9,10,11]:[9+((wave/10-1)%3)];bs.forEach((b,i)=>list.splice(Math.floor(list.length*(.5+i*.1)),0,b))}if(wave>=25){const nd=Math.min(12,4+Math.floor((wave-25)/4));for(let i=0;i<nd;i++)list.splice(Math.floor(R()*(list.length+1)),0,8)}
@@ -837,7 +837,7 @@ function applyWeaponUpgrade(k){
  const magazine=Math.min(weaponMagazine(k),Math.round(magOf(k)*ratio));ammoBy[k]=magazine;if(k===cur)ammo=magazine;
  rsv[k]=Math.min(weaponReserveMax(k),Math.round((rsv[k]||0)*ratio));
 }
-function wstat(k){const w=W[k],d=Math.round(25*(1+.25*lv.dmg)*w.dm*wmul(k)),sp=1/(.42*Math.pow(.87,lv.rate)*w.int),mg=weaponMagazine(k),rl=2.2*Math.pow(.87,lv.reload)*w.rel;return (wup[k]?'★'.repeat(wup[k])+' ':'')+'Schade '+d+(w.pel>1?' × '+w.pel+' kogels':'')+' · '+sp.toFixed(1)+' schoten/s · magazijn '+mg+' · herladen '+rl.toFixed(1)+' s · max. munitie '+weaponReserveMax(k)}
+function wstat(k){const w=W[k],d=Math.round(25*(1+.05*lv.dmg)*w.dm*wmul(k)),sp=(1+.05*lv.rate)/(.42*w.int),mg=weaponMagazine(k),rl=2.2*w.rel/(1+.05*lv.reload);return (wup[k]?'★'.repeat(wup[k])+' ':'')+'Schade '+d+(w.pel>1?' × '+w.pel+' kogels':'')+' · '+sp.toFixed(1)+' schoten/s · magazijn '+mg+' · herladen '+rl.toFixed(1)+' s · max. munitie '+weaponReserveMax(k)}
 let rsv={pistol:32};
 const magOf=k=>k==cur?ammo:(ammoBy[k]||0);
 function topUp(){if(infiniteAmmo()){ammo=st().mag;return}const t=Math.min(st().mag-ammo,rsv[cur]||0);if(t>0){ammo+=t;rsv[cur]-=t}}
