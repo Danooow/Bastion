@@ -731,23 +731,24 @@ function resolveEnemyHit(hit){
  if(!head&&!enemy.fly&&enemy.o.b){const p=enemy.o.b.worldToLocal(hit.point.clone());head=Math.abs(p.x)<=.4&&p.y>=1.62&&p.y<=2.65&&Math.abs(p.z)<=.46}
  return {enemy,head};
 }
-// A one-second melee action, available with every firearm.
-const KNIFE_DAMAGE=40,KNIFE_RANGE=3.2;
+// A half-second melee animation with immediate damage, available with every firearm.
+const KNIFE_DAMAGE=40,KNIFE_RANGE=3.2,KNIFE_DURATION=.5;
 let knifeTime=0,knifeHit=false;
 const knifeView=new THREE.Group();cam.add(knifeView);knifeView.visible=false;
 part(gB,mk(0x30251d),0,-.09,0,.065,.2,.07,knifeView);
 part(gB,mk(0x999da4),0,.025,0,.16,.025,.08,knifeView);
 const knifeBlade=part(gB,mk(0xd8dce2),0,.23,0,.06,.38,.018,knifeView);knifeBlade.rotation.z=-.08;
-function startKnife(){if(state!=='play'||knifeTime>0||upg.on)return;knifeTime=1;knifeHit=true;adsOn=false;ads=0;down=false;reloading=0;fl=0;knifeStrike();animateKnife(0)}
+function startKnife(){if(state!=='play'||knifeTime>0||upg.on)return;knifeTime=KNIFE_DURATION;knifeHit=true;adsOn=false;ads=0;down=false;reloading=0;fl=0;knifeStrike();animateKnife(0)}
 function knifeStrike(){scene.updateMatrixWorld(true);const origin=new THREE.Vector3(),forward=new THREE.Vector3();cam.getWorldPosition(origin);cam.getWorldDirection(forward);let target=null,best=KNIFE_RANGE;
  for(const e of E){if(e.state==='dead')continue;const center=new THREE.Vector3(e.g.position.x,e.g.position.y+(e.fly?0:1.2*e.g.scale.y),e.g.position.z),offset=center.sub(origin),distance=offset.length();if(distance<best&&offset.normalize().dot(forward)>.65){target=e;best=distance}}
  if(target){target.hp-=KNIFE_DAMAGE;hmv=1;SFX.hit();blood(target.g.position.clone().add(new THREE.Vector3(0,1,0)),12,1,target.fly?fm:bm);if(target.hp<=0)kill(target,false)}}
-function animateKnife(dt){if(knifeTime<=0){knifeView.visible=false;return}knifeTime=Math.max(0,knifeTime-dt);const elapsed=1-knifeTime,swing=Math.sin(elapsed*Math.PI);knifeView.visible=knifeTime>0;knifeView.position.set(.45-swing*.8,-.42+swing*.2,-.65);knifeView.rotation.set(-.4+swing*.5,.3,-.8+swing*2);gun.visible=knifeTime<=0}
-function shoot(){if(knifeTime>0)return;scene.updateMatrixWorld(true);const s=st();if(!infiniteAmmo())ammo--;cd=s.int;kick=.14;fl=.05;SFX.shot();const w=W[cur];for(let i=0;i<w.pel;i++){ray.setFromCamera({x:(R()-.5)*w.spr*(1-.6*ads),y:(R()-.5)*w.spr*(1-.6*ads)},cam);
- const targets=[],seen=new Set();for(const hit of ray.intersectObjects(E.filter(e=>e.state!='dead').map(e=>e.g).concat(fireballs.map(f=>f.m)),true)){if(hit.object.userData.fireball){if(!targets.length)targets.push(hit);break}const resolved=resolveEnemyHit(hit);if(!resolved||seen.has(resolved.enemy))continue;seen.add(resolved.enemy);targets.push(hit);if(targets.length>=(cur==='pistol'?2:1))break}const h=targets[0];
+function animateKnife(dt){if(knifeTime<=0){knifeView.visible=false;return}knifeTime=Math.max(0,knifeTime-dt);const elapsed=1-knifeTime/KNIFE_DURATION,swing=Math.sin(elapsed*Math.PI);knifeView.visible=knifeTime>0;knifeView.position.set(.45-swing*.8,-.42+swing*.2,-.65);knifeView.rotation.set(-.4+swing*.5,.3,-.8+swing*2);gun.visible=knifeTime<=0}
+const PENETRATION={pistol:[1,.75],smg:[1,.5],shotgun:[1,.5],ak:[1,.75,.5],sniper:[1,.85,.7,.55],minigun:[1,.6]};
+function shoot(){if(knifeTime>0)return;scene.updateMatrixWorld(true);const s=st();if(!infiniteAmmo())ammo--;cd=s.int;kick=.14;fl=.05;SFX.shot();const w=W[cur],penetration=PENETRATION[cur];for(let i=0;i<w.pel;i++){ray.setFromCamera({x:(R()-.5)*w.spr*(1-.6*ads),y:(R()-.5)*w.spr*(1-.6*ads)},cam);
+ const targets=[],seen=new Set();for(const hit of ray.intersectObjects(E.filter(e=>e.state!='dead').map(e=>e.g).concat(fireballs.map(f=>f.m)),true)){if(hit.object.userData.fireball){if(!targets.length)targets.push(hit);break}const resolved=resolveEnemyHit(hit);if(!resolved||seen.has(resolved.enemy))continue;seen.add(resolved.enemy);targets.push(hit);if(targets.length>=penetration.length)break}const h=targets[0];
  {const o_=ray.ray.origin,d_=ray.ray.direction;let L_=160;if(d_.y<0)L_=Math.min(L_,-o_.y/d_.y);if(h)L_=Math.min(L_,targets[targets.length-1].distance);flashM.getWorldPosition(MZ);tracer2(MZ,o_.clone().addScaledVector(d_,L_),wup[cur]?UCOL[wup[cur]]:cur=='sniper'?0xffffff:0xffd870,(cur=='sniper'?.05:.03)*(wup[cur]?1.6:1))}
  if(h&&h.object.userData.fireball){const f=h.object.userData.fireball;f.hp-=s.dmg;SFX.hit();hmv=1;blood(h.point,8,1,fm);if(f.hp<=0){blood(f.m.position,24,2,fm);removeFireball(f)}continue}
- for(let j=0;j<targets.length;j++){const hit=targets[j],{enemy:e,head:hd}=resolveEnemyHit(hit);e.hp-=s.dmg*(hd?2:1)*(j===0?1:.75);blood(hit.point,hd?16:9,1,e.fly?fm:bm);SFX.hit();hmv=1;if(!e.giant&&!enemiesFrozen())e.g.position.z-=.15;if(e.hp<=0)kill(e,hd)}
+ for(let j=0;j<targets.length;j++){const hit=targets[j],{enemy:e,head:hd}=resolveEnemyHit(hit);e.hp-=s.dmg*(hd?2:1)*penetration[j];blood(hit.point,hd?16:9,1,e.fly?fm:bm);SFX.hit();hmv=1;if(!e.giant&&!enemiesFrozen())e.g.position.z-=.15;if(e.hp<=0)kill(e,hd)}
  }if(ammo<=0)reload()}
 function endWave(){clearFireballs();state='shop';gold+=20+wave*8;for(const a of A)if(a.state!='dead')a.hp=a.max;down=false;adsOn=false;document.exitPointerLock&&document.exitPointerLock();showDone()}
 let mX=innerWidth/2,mY=innerHeight/2;
