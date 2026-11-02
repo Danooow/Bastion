@@ -611,13 +611,15 @@ const fm=[0xff8a00,0xffd23a,0x2a2a2a].map(c=>new THREE.MeshBasicMaterial({color:
 const gTri=new THREE.ConeGeometry(.28,.45,3);gTri.rotateX(Math.PI);const triR=new THREE.MeshBasicMaterial({color:0xff2222,fog:false}),triB=new THREE.MeshBasicMaterial({color:0x2a7bff,fog:false});
 function hideTri(g){for(const c of g.children)if(c.userData.tri)c.visible=false}
 // Shared geometry/materials; each enemy owns only its bar transforms.
-const enemyHpGeometry=new THREE.PlaneGeometry(1,1),enemyHpRed=new THREE.MeshBasicMaterial({color:0xff2222,side:THREE.DoubleSide,fog:false,depthWrite:false}),enemyHpBack=new THREE.MeshBasicMaterial({color:0x260606,side:THREE.DoubleSide,fog:false,depthWrite:false});
+const enemyHpGeometry=new THREE.PlaneGeometry(1,1),enemyHpRed=new THREE.MeshBasicMaterial({color:0xff3030,side:THREE.DoubleSide,fog:false,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}),enemyHpBack=new THREE.MeshBasicMaterial({color:0x260606,side:THREE.DoubleSide,fog:false,transparent:true,depthTest:false,depthWrite:false,toneMapped:false});
 function prepareEnemy(e){
  e.maxHp=e.hp;
  for(const child of [...e.g.children])if(child.userData.tri)e.g.remove(child);
  const group=new THREE.Group(),back=new THREE.Mesh(enemyHpGeometry,enemyHpBack),fill=new THREE.Mesh(enemyHpGeometry,enemyHpRed);
  group.userData.tri=1;group.userData.healthBar=true;group.position.y=e.fly?4:2.9+(e.o.off||0);
  back.scale.set(1.24,.18,1);fill.scale.set(1.16,.1,1);fill.position.z=.01;
+ // Draw the background before the fill, after world props and transparent clouds.
+ group.renderOrder=10000;back.renderOrder=10000;fill.renderOrder=10001;
  back.raycast=fill.raycast=()=>{};group.add(back,fill);e.g.add(group);e.healthBar={group,fill};
 }
 const healthBarRotation=new THREE.Quaternion();
@@ -1397,11 +1399,11 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
  const bob=Math.sin(sprintPhase),sway=Math.cos(sprintPhase*.5);
  gun.position.x+=sprintBlend*(.12+sway*.035);gun.position.y+=sprintBlend*(-.13+Math.abs(bob)*.055);gun.position.z+=sprintBlend*.1;
  gun.rotation.x+=sprintBlend*(-.32+bob*.075);gun.rotation.y+=sprintBlend*.35;gun.rotation.z+=sprintBlend*(.3+sway*.055)}
- if(!upg.on)animateWeaponReload();animateKnife(dt);updateEnemyHealthBars();
+ if(!upg.on)animateWeaponReload();animateKnife(dt);
  hmv=Math.max(0,hmv-dt*5);$('hm').style.opacity=hmv;flv=Math.max(0,flv-dt*2.5);$('flash').style.opacity=Math.max(flv,healthVignette(dt));
  shake*=.88;cG.position.x*=.8;
  cam.position.set(px+(R()-.5)*shake,cyv+1.7+(R()-.5)*shake*.6,pz+(R()-.5)*shake*.4);cam.rotation.set(pitch,yaw,0);updSky(dt);XT(dt,tt);for(const f of eA)f(dt,tt);
- ren.render(scene,cam)}
+ updateEnemyHealthBars();ren.render(scene,cam)}
 // Photograph the actual enemy castle for the main menu; no external image needed.
 {const photoCam=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,1200);photoCam.position.set(32,23,-65);photoCam.lookAt(0,10,-130);gun.visible=false;ren.render(scene,photoCam);$('ovStart').style.setProperty('--castle-photo','url("'+ren.domElement.toDataURL('image/jpeg',.9)+'")');gun.visible=true}
 requestAnimationFrame(frame);
