@@ -369,7 +369,9 @@ function updSky(dt){tod=.25;let i=0;while(KF[i+1][0]<tod)i++;const a=KF[i],b=KF[
 const gun=new THREE.Group();
 const flashM=part(gS,new THREE.MeshBasicMaterial({color:0xffcc55}),0,0,-.45,.12,.12,.12,gun);flashM.visible=false;gun.position.set(.28,-.26,-.6);cam.add(gun);
 const W={pistol:{n:'M1911',d:'Betrouwbaar en snel te herladen',price:0,dm:1,int:1,rel:1,mag:1,pel:1,spr:0,col:0x222222,len:.7},smg:{n:'MP5',d:'Zeer hoge vuursnelheid, lage schade per kogel',price:250,dm:.4,int:.3,rel:1.1,mag:3,pel:1,spr:.01,col:0x2a2d33,len:.8},shotgun:{n:'Remington 870',d:'7 kogels per schot, dodelijk van dichtbij',price:400,dm:.55,int:1.7,rel:1.3,mag:.5,pel:7,spr:.09,col:0x3a3a3a,len:.95},sniper:{n:'Barrett M82',d:'Enorme schade, langzame schoten',price:700,dm:4.5,int:2.2,rel:1.2,mag:.5,pel:1,spr:0,col:0x1c2a1c,len:1.15},ak:{n:'AK-47',d:'Snel en krachtig, 30 kogels',price:900,dm:.9,int:.2,rel:1.2,mag:3.75,pel:1,spr:.015,col:0x3a2a1a,len:1},minigun:{n:'M134 Minigun',d:'Zwaarder dan de AK-47: meer schade per kogel en sneller · 150 kogels · herladen duurt 5 seconden',price:2000,dm:1,int:.16,rel:2.2727,mag:18.75,pel:1,spr:.03,col:0x2a2d33,len:1.2}};
-let cur='pistol';const owned={pistol:1};const wup={},upg={on:0,t:0,k:null,phase:0,charge:0,applied:0};const WEAPON_MULTIPLIERS=[1,2,3,4.5],wmul=k=>WEAPON_MULTIPLIERS[wup[k]||0];const UCOL=[0xffd870,0x123b85,0x8b32ce,0xc9252d],UCOST=[8000,12000,20000];
+let cur='pistol';const owned={pistol:1};const wup={},upg={on:0,t:0,k:null,phase:0,charge:0,applied:0};const WEAPON_MULTIPLIERS=[1,2,3,4.5],wmul=k=>WEAPON_MULTIPLIERS[wup[k]||0];const UCOL=[0xffd870,0x123b85,0x8b32ce,0xc9252d],UCOST=[5000,10000,15000];
+const upgradeRequiredWave=k=>Math.min((wup[k]||0)+1,3)*10;
+const isWeaponUpgradeLocked=k=>!sandboxMode&&(wup[k]||0)<3&&wave<upgradeRequiredWave(k);
 const S=(c,m,r)=>new THREE.MeshStandardMaterial({color:c,metalness:m,roughness:r});
 const fill=new THREE.PointLight(0xb8c4ff,.45,4);fill.position.set(.2,.2,-.3);cam.add(fill);
 function detailGun(k){const st_=S(0x3a3f46,.45,.42),dk=S(0x1c1f23,.5,.35),pl=S(0x24272c,.1,.8),wd=S(0x74492a,0,.65),br=S(0xb59a4a,.7,.3),gl=S(0x2e211a,0,.9),sl=S(0x3a4a32,0,.9),gm=new THREE.MeshBasicMaterial({color:0x4a86e0}),G=gun;
@@ -1168,12 +1170,12 @@ const portalU={t:{value:0},boost:{value:0}};let pBoost=0;
 const stripC=new THREE.MeshBasicMaterial({color:0x34e8ff}),stripM=new THREE.MeshBasicMaterial({color:0xd040ff});
 let ringO,ringI,coreG,coreS,antL,pl1,pl2,ptsA;const PNU=90,ppos=new Float32Array(PNU*3),pang=[],prad=[],pspd=[];
 const scC=document.createElement('canvas');scC.width=256;scC.height=192;const scX=scC.getContext('2d'),scT=new THREE.CanvasTexture(scC);let scKey='';
-function drawScreen(){const k=upg.on?upg.k:cur,l=wup[k]||0,cost=UCOST[Math.min(l,2)],ok=gold>=cost,sec=Math.max(0,Math.ceil(6.1-upg.t)),key=k+l+(ok?1:0)+((sandboxMode||wave>UPG_WAVE)?'a':'l')+(upg.on?'u'+(upg.phase==1?sec:upg.phase):'');if(key==scKey)return;scKey=key;
+function drawScreen(){const k=upg.on?upg.k:cur,l=wup[k]||0,cost=UCOST[Math.min(l,2)],ok=gold>=cost,sec=Math.max(0,Math.ceil(6.1-upg.t)),key=k+l+(ok?1:0)+(!isWeaponUpgradeLocked(k)?'a':'l')+(upg.on?'u'+(upg.phase==1?sec:upg.phase):'');if(key==scKey)return;scKey=key;
  scX.fillStyle='#04101a';scX.fillRect(0,0,256,192);scX.strokeStyle='#34e8ff';scX.lineWidth=4;scX.strokeRect(4,4,248,184);scX.textAlign='center';
  scX.fillStyle='#34e8ff';scX.font='bold 19px monospace';scX.fillText('UPGRADE-PORTAAL',128,32);
  scX.fillStyle='#fff';scX.font='bold 25px monospace';scX.fillText(W[k].n.toUpperCase(),128,68);
  scX.fillStyle='#ffd23a';scX.font='bold 28px monospace';scX.fillText('*'.repeat(l)+'-'.repeat(3-l),128,102);
- if((!sandboxMode&&wave<=UPG_WAVE)&&!upg.on){scX.fillStyle='#ff5a5a';scX.font='bold 24px monospace';scX.fillText('VERGRENDELD',128,138);scX.fillStyle='#bfefff';scX.font='16px monospace';scX.fillText('ontgrendelt na golf '+UPG_WAVE,128,168)}else if(upg.on){scX.fillStyle='#d58cff';scX.font='bold 22px monospace';scX.fillText(upg.phase==0?'WAPEN GAAT IN PORTAAL':upg.phase==1?'UPGRADEN... '+sec+'s':'KLAAR!',128,140)}
+ if(isWeaponUpgradeLocked(k)&&!upg.on){scX.fillStyle='#ff5a5a';scX.font='bold 24px monospace';scX.fillText('VERGRENDELD',128,138);scX.fillStyle='#bfefff';scX.font='16px monospace';scX.fillText('vanaf golf '+upgradeRequiredWave(k),128,168)}else if(upg.on){scX.fillStyle='#d58cff';scX.font='bold 22px monospace';scX.fillText(upg.phase==0?'WAPEN GAAT IN PORTAAL':upg.phase==1?'UPGRADEN... '+sec+'s':'KLAAR!',128,140)}
  else if(l>=3){scX.fillStyle='#ffc83a';scX.font='bold 24px monospace';scX.fillText('MAX NIVEAU',128,146)}
  else{scX.fillStyle=ok?'#5dff7a':'#ff5a5a';scX.font='bold 26px monospace';scX.fillText(cost+' goud',128,140);scX.fillStyle='#bfefff';scX.font='18px monospace';scX.fillText(ok?'[E] upgraden':'te weinig goud',128,170)}
  scT.needsUpdate=true}
@@ -1206,10 +1208,10 @@ const TRL=[],trG=new THREE.SphereGeometry(.06,6,5),trM=[0xd58cff,0x34e8ff,0xffff
 function spark(p,v,m){const o=new THREE.Mesh(trG,trM[m!==undefined?m:R()*3|0]);o.position.copy(p);o.frustumCulled=false;scene.add(o);TRL.push({o,l:.6,v:v||new THREE.Vector3((R()-.5)*.6,(R()-.5)*.6,(R()-.5)*.6)})}
 // prompt
 const mpr=document.createElement('div');mpr.style.cssText='position:fixed;left:50%;bottom:20%;transform:translateX(-50%);text-align:center;font-size:22px;padding:10px 20px;background:rgba(12,6,26,.8);border:1px solid #b04cff;color:#ecdcff;box-shadow:0 0 18px #9a3cff;pointer-events:none;display:none;z-index:3';document.body.appendChild(mpr);
-function tryUpg(){if(grenadeTime>0||knifeTime>0||state!='play'||upg.on||px<21.5||!owned[cur]||!onWall())return;if((!sandboxMode&&wave<=UPG_WAVE)){banner('Upgrade-machine ontgrendelt na golf '+UPG_WAVE);tone(150,.2,'square',.1,-50);return}const l=wup[cur]||0;if(l>=3){banner('Dit wapen is al op maximaal niveau');return}const c=UCOST[l];if(gold<c){banner('Te weinig goud: '+c+' nodig');tone(150,.2,'square',.1,-50);return}
+function tryUpg(){if(grenadeTime>0||knifeTime>0||state!='play'||upg.on||px<21.5||!owned[cur]||!onWall())return;const l=wup[cur]||0;if(l>=3){banner('Dit wapen is al op maximaal niveau');return}if(isWeaponUpgradeLocked(cur)){banner('Wapenniveau '+(l+1)+' beschikbaar vanaf golf '+upgradeRequiredWave(cur));tone(150,.2,'square',.1,-50);return}const c=UCOST[l];if(gold<c){banner('Te weinig goud: '+c+' nodig');tone(150,.2,'square',.1,-50);return}
  gold-=c;upg.on=1;upg.t=0;upg.k=cur;upg.phase=0;upg.applied=0;upg.charge=0;ringFx(0x34e8ff,.7,8);down=false;adsOn=false;reloading=0;tone(220,.9,'sawtooth',.14,700);noise(.5,.25,900)}
 addEventListener('keydown',e=>{if(e.code=='KeyE')tryUpg()});
-const UPG_WAVE=10;let upFov=0;
+let upFov=0;
 const _pv=new THREE.Vector3(),_pw=new THREE.Vector3(PX,PY,0),T1=1.5,T2=5.6,T3=2,TA=T1+T2-.5;
 function endUpg(){if(!upg.applied){upg.applied=1;applyWeaponUpgrade(upg.k);buildGun(upg.k)}upg.on=0;upg.charge=0;gun.scale.setScalar(1);gun.rotation.set(0,0,0);gun.visible=true;const L=wup[upg.k]||0;gunGlow.intensity=L?.25:0}
 function climax(){upFx.fl=1;shake=1.6;upFov=18;pBoost=5;ringFx(0xffffff,.95,20);ringFx(0xb04cff,.8,14);ringFx(0xff6bf0,.7,9);shardBurst(70);for(let i=0;i<60;i++)spark(_pw.clone(),new THREE.Vector3((R()-.7)*8,(R()-.5)*8,(R()-.5)*8));noise(1.4,.8,200);tone(55,1.8,'sawtooth',.3,-25);tone(880,1.4,'sine',.16,1400);setTimeout(()=>tone(1320,.9,'triangle',.14,500),180);setTimeout(()=>tone(1760,1.1,'sine',.12,300),380);banner('✦ '+W[upg.k].n+' · NIVEAU '+wup[upg.k]+' ✦')}
@@ -1233,7 +1235,7 @@ eA.push((dt,t)=>{portalU.t.value=t;const nr=state=='play'&&!upg.on&&px>=21.5&&on
  for(let i=TRL.length-1;i>=0;i--){const q=TRL[i];q.l-=dt;q.o.position.addScaledVector(q.v,dt);q.o.scale.setScalar(Math.max(.01,q.l/.6)*1.2);if(q.l<=0){scene.remove(q.o);TRL.splice(i,1)}}
  for(const m of skinMats)m.emissiveIntensity=m.userData.base*(.85+.3*Math.sin(t*3));
  if(nr||upg.on)drawScreen();
- if(nr){const l=wup[cur]||0,c=UCOST[Math.min(l,2)];mpr.style.display='block';mpr.style.borderColor=(!sandboxMode&&wave<=UPG_WAVE)?'#ff5a5a':gold>=c||l>=3?'#b04cff':'#ff5a5a';mpr.innerHTML=(!sandboxMode&&wave<=UPG_WAVE)?'🔒 Upgrade-machine ontgrendelt na golf '+UPG_WAVE+'<br><small>Je zit nu in golf '+wave+'</small>':l>=3?'<b>'+W[cur].n+'</b> is al volledig geüpgraded ★★★':'<b>[E]</b> Upgrade <b>'+W[cur].n+'</b> naar niveau '+(l+1)+' · <span style="color:'+(gold>=c?'#7dff8a':'#ff7a7a')+'">'+c+' goud</span>'+(gold<c?'<br><small>Te weinig goud</small>':'')}else mpr.style.display='none'});
+ if(nr){const l=wup[cur]||0,c=UCOST[Math.min(l,2)];mpr.style.display='block';mpr.style.borderColor=isWeaponUpgradeLocked(cur)?'#ff5a5a':gold>=c||l>=3?'#b04cff':'#ff5a5a';mpr.innerHTML=isWeaponUpgradeLocked(cur)?'🔒 Niveau '+(l+1)+' beschikbaar vanaf golf '+upgradeRequiredWave(cur)+'<br><small>Je zit nu in golf '+wave+'</small>':l>=3?'<b>'+W[cur].n+'</b> is al volledig geüpgraded ★★★':'<b>[E]</b> Upgrade <b>'+W[cur].n+'</b> naar niveau '+(l+1)+' · <span style="color:'+(gold>=c?'#7dff8a':'#ff7a7a')+'">'+c+' goud</span>'+(gold<c?'<br><small>Te weinig goud</small>':'')}else mpr.style.display='none'});
 // wapenskin: galaxy + paarse kristallen + zwart magma
 const skinCache=new Map(),skinTB={pistol:[.0385,.04,-.25,.17,.04,-.335,.04],smg:[.0415,0,-.55,.4,.01,-.655,.055],shotgun:[.0385,0,-1,.5,.03,-1.16,.06],sniper:[.0365,0,-1.4,.6,.015,-1.53,.062],ak:[.0365,0,-1.2,.55,.012,-1.28,.056],minigun:[.107,0,-.6,-.14,0,-1.5,0]};
 const gunGlow=new THREE.PointLight(0xb04cff,0,3.5);gunGlow.position.set(.25,-.2,-.8);cam.add(gunGlow);let skinMats=[],gunFx=null;
@@ -1475,12 +1477,12 @@ const TBC=document.createElement('canvas');TBC.width=512;TBC.height=340;const TB
  const sc=new THREE.Mesh(new THREE.PlaneGeometry(2.7,1.79),new THREE.MeshBasicMaterial({map:TBT}));sc.position.z=.02;tg.add(sc);
  const tl2=new THREE.PointLight(0xb04cff,.9,8);tl2.position.set(0,0,1.2);tg.add(tl2);
  eA.push((dt,t)=>{tg.position.y=8.4+Math.sin(t*1.6)*.18;tg.rotation.y=-.8+Math.sin(t*.7)*.06})}
-function drawTab(){const k=cur,l=wup[k]||0,lk=(!sandboxMode&&wave<=UPG_WAVE),mx=l>=3,c=UCOST[Math.min(l,2)],ok=gold>=c,key=k+l+lk+ok+(upg.on?'u':'');if(key==tbKey)return;tbKey=key;const x=TBX;
+function drawTab(){const k=cur,l=wup[k]||0,lk=isWeaponUpgradeLocked(k),mx=l>=3,c=UCOST[Math.min(l,2)],ok=gold>=c,key=k+l+lk+ok+(upg.on?'u':'');if(key==tbKey)return;tbKey=key;const x=TBX;
  x.fillStyle='#070316';x.fillRect(0,0,512,340);const g=x.createLinearGradient(0,0,512,340);g.addColorStop(0,'rgba(140,50,255,.35)');g.addColorStop(1,'rgba(52,232,255,.15)');x.fillStyle=g;x.fillRect(0,0,512,340);
  x.strokeStyle='#b04cff';x.lineWidth=8;x.strokeRect(4,4,504,332);x.strokeStyle='#34e8ff';x.lineWidth=2;x.strokeRect(16,16,480,308);x.textAlign='center';
  x.fillStyle='#34e8ff';x.font='bold 26px monospace';x.fillText('WAPEN-UPGRADE',256,52);x.fillStyle='#fff';x.font='bold 58px monospace';x.fillText(W[k].n.toUpperCase(),256,126);
  x.fillStyle='#ffd23a';x.font='bold 46px monospace';x.fillText('★'.repeat(l)+'☆'.repeat(3-l),256,184);
- if(lk){x.fillStyle='#ff5a5a';x.font='bold 44px monospace';x.fillText('VERGRENDELD',256,250);x.fillStyle='#bfefff';x.font='24px monospace';x.fillText('ontgrendelt na golf '+UPG_WAVE,256,294)}
+ if(lk){x.fillStyle='#ff5a5a';x.font='bold 44px monospace';x.fillText('VERGRENDELD',256,250);x.fillStyle='#bfefff';x.font='24px monospace';x.fillText('vanaf golf '+upgradeRequiredWave(k),256,294)}
  else if(mx){x.fillStyle='#ffc83a';x.font='bold 48px monospace';x.fillText('MAX NIVEAU',256,260)}
  else{x.fillStyle=ok?'#5dff7a':'#ff5a5a';x.font='bold 56px monospace';x.fillText(c.toLocaleString('nl-NL')+' goud',256,252);x.fillStyle='#bfefff';x.font='24px monospace';x.fillText('naar niveau '+(l+1)+(ok?'':' · te weinig goud'),256,296)}
  TBT.needsUpdate=true}
