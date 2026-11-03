@@ -368,7 +368,7 @@ function updSky(dt){tod=.25;let i=0;while(KF[i+1][0]<tod)i++;const a=KF[i],b=KF[
 // wapen
 const gun=new THREE.Group();
 const flashM=part(gS,new THREE.MeshBasicMaterial({color:0xffcc55}),0,0,-.45,.12,.12,.12,gun);flashM.visible=false;gun.position.set(.28,-.26,-.6);cam.add(gun);
-const W={pistol:{n:'M1911',d:'Betrouwbaar en snel te herladen',price:0,dm:20,int:1,rel:1,mag:1,pel:1,spr:0,col:0x222222,len:.7},smg:{n:'MP5',d:'Zeer hoge vuursnelheid, lage schade per kogel',price:250,dm:15,int:.3,rel:1.1,mag:3.75,pel:1,spr:.01,col:0x2a2d33,len:.8},shotgun:{n:'Remington 870',d:'7 kogels per schot, dodelijk van dichtbij',price:400,dm:15,int:1.7,rel:1.3,mag:.875,pel:7,spr:.09,col:0x3a3a3a,len:.95},sniper:{n:'Barrett M82',d:'Enorme schade, langzame schoten',price:700,dm:120,int:2.2,rel:1.2,mag:1.25,pel:1,spr:0,col:0x1c2a1c,len:1.15},ak:{n:'AK-47',d:'Snel en krachtig, 40 kogels',price:900,dm:35,int:.2,rel:1.2,mag:5,pel:1,spr:.015,col:0x3a2a1a,len:1},minigun:{n:'M134 Minigun',d:'Zeer hoge vuursnelheid · 30 basisschade per kogel · 150 kogels · herladen duurt 5 seconden',price:2000,dm:30,int:.16/1.3,rel:2.2727,mag:18.75,pel:1,spr:.03,col:0x2a2d33,len:1.2}};
+const W={pistol:{n:'M1911',d:'Betrouwbaar en snel te herladen',price:0,dm:20,int:1,rel:1,mag:1,pel:1,spr:0,col:0x222222,len:.7},smg:{n:'MP5',d:'Zeer hoge vuursnelheid, lage schade per kogel',price:1000,dm:15,int:.3,rel:1.1,mag:3.75,pel:1,spr:.01,col:0x2a2d33,len:.8},shotgun:{n:'Remington 870',d:'7 kogels per schot, dodelijk van dichtbij',price:2000,dm:15,int:1.7,rel:1.3,mag:.875,pel:7,spr:.09,col:0x3a3a3a,len:.95},sniper:{n:'Barrett M82',d:'Enorme schade, langzame schoten',price:4000,dm:120,int:2.2,rel:1.2,mag:1.25,pel:1,spr:0,col:0x1c2a1c,len:1.15},ak:{n:'AK-47',d:'Snel en krachtig, 40 kogels',price:6000,dm:35,int:.2,rel:1.2,mag:5,pel:1,spr:.015,col:0x3a2a1a,len:1},minigun:{n:'M134 Minigun',d:'Zeer hoge vuursnelheid · 30 basisschade per kogel · 150 kogels · herladen duurt 5 seconden',price:10000,dm:30,int:.16/1.3,rel:2.2727,mag:18.75,pel:1,spr:.03,col:0x2a2d33,len:1.2}};
 let cur='pistol';const owned={pistol:1};const wup={},upg={on:0,t:0,k:null,phase:0,charge:0,applied:0};const WEAPON_MULTIPLIERS=[1,2,3,4.5],wmul=k=>WEAPON_MULTIPLIERS[wup[k]||0];const UCOL=[0xffd870,0x123b85,0x8b32ce,0xc9252d],UCOST=[5000,10000,15000];
 const upgradeRequiredWave=k=>Math.min((wup[k]||0)+1,3)*10;
 const isWeaponUpgradeLocked=k=>normalRules()&&(wup[k]||0)<3&&wave<upgradeRequiredWave(k);
@@ -612,7 +612,7 @@ const U={dmg:{n:"Schade",d:"+5% schade per kogel per niveau",b:80,growth:1.25},r
 const st=()=>{const w=W[cur];return{dmg:w.dm*(1+.05*lv.dmg)*wmul(cur),int:.42*w.int/(1+.05*lv.rate),rel:2.2*w.rel/(1+.05*lv.reload),mag:weaponMagazine(cur),arm:1-.06*lv.armor,loot:1+.05*lv.loot}};
 const cost=k=>Math.round(U[k].b*Math.pow(U[k].growth,lv[k]));
 // A deterministic starter budget reaches the first weapon tier without lucky drops or streaks.
-const starterWaveBonus=round=>round>=1&&round<=9?100*round:0;
+const starterWaveBonus=round=>round>=1&&round<=9?100*round+(round>=6?250:0):0;
 const waveCompletionReward=round=>Math.round((20+round*8)*.75)+starterWaveBonus(round);
 let lastWaveReward=0,lastWaveStarterReward=0;
 function banner(t){const b=$('banner');b.textContent=t;b.style.opacity=1;setTimeout(()=>b.style.opacity=0,2200)}
