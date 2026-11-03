@@ -47,7 +47,7 @@ input[type=range]{accent-color:var(--acc);width:100%}
 .powerupTimer svg{width:64px;height:72px}.powerupTimer.slow{animation:powerupFade 1.6s ease-in-out infinite alternate}.powerupTimer.fast{animation:powerupFade .4s ease-in-out infinite alternate}@keyframes powerupFade{from{opacity:1}to{opacity:.15}}
 @media(max-width:600px){#tl,#pl,#staminaHud{width:38vw!important}#bossb{width:45vw!important}#bossn{font-size:16px!important}#powerupShieldHud{bottom:180px!important}#br{max-width:48vw}#rl{font-size:14px!important}#tc{left:calc(36px + 38vw);font-size:44px;bottom:90px}#ammoLine{gap:10px}#ammoCount{font-size:27px}#ammoCount small{font-size:18px}}
 
-#powerupNotice{position:fixed;left:50%;top:10px;transform:translateX(-50%);font-size:32px;text-align:center;color:#ffd740;text-shadow:0 2px 6px #000;pointer-events:none;opacity:0;transition:opacity .35s;z-index:4}
+#powerupNotice{position:fixed;left:50%;top:82px;transform:translateX(-50%);font-size:32px;text-align:center;color:#ffd740;text-shadow:0 2px 6px #000;pointer-events:none;opacity:0;transition:opacity .35s;z-index:4}
 #armoryPrompt{position:fixed;left:50%;bottom:26%;transform:translateX(-50%);padding:10px 18px;background:#17140edb;border:1px solid #d4a843;color:#ffdf83;font-size:20px;pointer-events:none;display:none;text-align:center}
 #tc.betweenWaves{color:#fff!important;animation:roundBreakBlink .6s ease-in-out infinite alternate}@keyframes roundBreakBlink{from{opacity:1}to{opacity:.2}}
 </style></head><body>
@@ -58,7 +58,7 @@ input[type=range]{accent-color:var(--acc);width:100%}
 <div class="hud roman" id="tc"><span id="wv">I</span></div>
 <div class="hud" id="tr">Goud: <span id="gd">0</span></div>
 <div class="hud" id="br"><div id="ammoLine"><div><div id="rl">M1911</div><div id="weaponStatus"></div></div><div id="ammoCount"><span id="am">8</span><small> / <span id="mg">80</span></small></div></div><div id="grenadeHud" aria-label="Granaten"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M10 1h7v3h-7zM8 5h11v3H8zM8 9h9l4 7-2 12-5 3-7-3-3-12zM18 5l4 1 1 9h-2l-1-7-2-1z"/><path d="M9 12h7M8 17h9M9 22h7M12 11v15" fill="none" stroke="#fff" stroke-width=".8"/></svg><span id="grenadeCount">0/4</span></div></div>
-<div class="hud" id="bossb" style="left:50%;top:50px;transform:translateX(-50%);width:min(480px,48vw);text-align:center;display:none"><div id="bossn" style="font-size:22px;color:var(--acc)"></div><div class="bar"><i id="bossh"></i></div></div>
+<div class="hud" id="bossb" style="left:50%;top:14px;transform:translateX(-50%);width:min(480px,48vw);text-align:center;display:none"><div id="bossn" style="font-size:22px;color:var(--acc)"></div><div class="bar"><i id="bossh"></i></div></div>
 <div class="hud" id="side" style="left:0;top:174px;padding:6px 14px 6px 12px;font-size:14px;line-height:1.5;background:#000a;border-left:3px solid var(--acc);color:var(--mut)"></div>
 <div class="hud" id="streak" style="display:none;right:22px;bottom:210px;text-align:center"><svg id="stf" viewBox="0 0 24 32" width="58" height="76"><path id="stp" d="M12 1c1 6 9 10 9 19a9 9 0 0 1-18 0c0-5 3-8 5-11 1 3 2 4 4 4-1-4-1-8 0-12z" fill="#ff3b2f"/><path d="M12 14c1 3 4 5 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5 1 1 2 1 2-3z" fill="#fff" fill-opacity=".55"/></svg><div id="stx" style="font-size:36px;font-weight:700;line-height:1;color:#ff3b2f">1x</div><div class="bar" style="width:74px;margin:4px auto 0"><i id="stb" style="width:0"></i></div></div>
 <div id="powerupNotice" role="status" aria-live="polite"></div><div id="armoryPrompt">[E] Armory · wapens en upgrades</div><div id="scope"></div><div class="hud" id="cross"></div><div id="hm"></div><div id="flash"></div><div id="banner"></div>
@@ -521,6 +521,7 @@ function decal(x,z,s){const m=new THREE.Mesh(dGeo,dM);m.rotation.x=-Math.PI/2;m.
 // toestand
 let sandboxMode=false,sandboxRestrictions=false,sandboxRestrictedGold=0;
 const normalRules=()=>!sandboxMode||sandboxRestrictions;
+const worldRunning=()=>state==='play'||state==='shop';
 const sandboxCheats=()=>sandboxMode&&!sandboxRestrictions;
 const cheats={godmode:false,maxammo:false,skipgolf:false,freeze:false,powerupshield:false,powerupmaxammo:false,powerupinstakill:false,powerupdoublegold:false};
 const enemiesFrozen=()=>sandboxCheats()&&cheats.freeze;
@@ -633,7 +634,7 @@ function rollGoldSpawn(random=Math.random){return random()<.25}
 function halveGiantSpawns(queue){let index=0;for(let i=0;i<queue.length;i++)if(queue[i]===1&&index++%2===0)queue[i]=0}
 function startWave(){waveBreakTime=0;goldSpawnedThisWave=false;knifeTime=0;knifeView.visible=false;criticalHealth=false;wave++;php=100;playerRegenWait=0;resetMovement();noodAmmo();saveHS();showHS();applyEra();const n=Math.floor(6+wave*3.5);list=[];for(let i=0;i<n;i++){const r=R();list.push(wave>=3&&r<.1+wave*.01?1:wave>=3&&r<.28?7:0)}halveGiantSpawns(list);if(wave%10==0){const bs=wave>=50?[9,10,11]:[9+((wave/10-1)%3)];bs.forEach((b,i)=>list.splice(Math.floor(list.length*(.5+i*.1)),0,b))}if(wave>=25){const nd=Math.min(12,4+Math.floor((wave-25)/4));for(let i=0;i<nd;i++)list.splice(Math.floor(R()*(list.length+1)),0,8)}
 if(wave>=45){const nf=Math.min(16,3+Math.floor((wave-45)/2));for(let i=0;i<nf;i++)list.splice(Math.floor(R()*(list.length+1)),0,13)}
-{if(rollGoldSpawn())list.splice(Math.floor(R()*list.length),0,12)}spawnT=1;banner('Golf '+wave+({3:' · paardenruiters en reuzen',15:' · reus te koop',20:' · ridderleiders te koop',30:' · toren te koop',45:' · snelle springers!',5:' · de bomen worden kaal',10:' · monsters!',20:' · de lucht kleurt rood',25:' · rode draken en groene monsters!',35:' · een vulkaan rijst op · schildbel te koop',40:' · droogte: de natuur verdort',50:' · de rivier en meren worden lava',55:' · vulkaan vuurt! Schiet de vuurballen kapot'}[wave]||'')+(wave%10==0?' · EINDBAAS!':''));SFX.horn();updateWaveHud()}
+{if(rollGoldSpawn())list.splice(Math.floor(R()*list.length),0,12)}spawnT=1;SFX.horn();updateWaveHud()}
 const BN=['Igorovich','Double D','Mr.Vibe'],BLK=[{cloth:0xe3d3ab,skin:0xe8b890,hair:0x7a5a38},{cloth:0x4a5a48,skin:0xe8c0a0,hair:0x4a3524},{cloth:0x121212,skin:0xd9a074,hair:0x141414}];
 function skullSprite(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.shadowColor='#ff2a2a';x.shadowBlur=18;x.fillStyle='#eee9d8';x.strokeStyle='#1a1410';x.lineWidth=7;
  x.beginPath();x.ellipse(128,108,78,72,0,0,6.283);x.fill();x.stroke();x.beginPath();x.roundRect?x.roundRect(88,158,80,52,12):x.rect(88,158,80,52);x.fill();x.stroke();x.shadowBlur=0;
@@ -923,12 +924,17 @@ function shoot(){if(grenadeTime>0||knifeTime>0)return;scene.updateMatrixWorld(tr
  if(h&&h.object.userData.fireball){const f=h.object.userData.fireball;f.hp-=s.dmg;SFX.hit();hmv=1;blood(h.point,8,1,fm);if(f.hp<=0){blood(f.m.position,24,2,fm);removeFireball(f)}continue}
  for(let j=0;j<targets.length;j++){const hit=targets[j],{enemy:e,head:hd}=resolveEnemyHit(hit);e.hp-=playerEnemyDamage(e,s.dmg*(hd?2:1)*penetration[j]);blood(hit.point,hd?16:9,1,e.fly?fm:bm);SFX.hit();hmv=1;if(e.hp<=0)kill(e,hd)}
  }if(ammo<=0)reload()}
-function endWave(){if(state!=='play'||waveBreakTime>0)return;cancelGrenade();clearFireballs();for(const b of B)scene.remove(b.m);B.length=0;lastWaveReward=goldReward(waveCompletionReward(wave));lastWaveStarterReward=goldReward(starterWaveBonus(wave));gold+=lastWaveReward;for(const a of A)if(a.state!='dead')a.hp=a.max;down=false;adsOn=false;waveBreakTime=WAVE_BREAK_DURATION;updateWaveHud()}
-function updateWaveBreak(dt){if(state!=='play'||waveBreakTime<=0)return;waveBreakTime=Math.max(0,waveBreakTime-dt);if(waveBreakTime<1e-7){waveBreakTime=0;topUp();reloading=0;startWave()}}
+function endWave(){if(!worldRunning()||waveBreakTime>0)return;cancelGrenade();clearFireballs();for(const b of B)scene.remove(b.m);B.length=0;lastWaveReward=goldReward(waveCompletionReward(wave));lastWaveStarterReward=goldReward(starterWaveBonus(wave));gold+=lastWaveReward;for(const a of A)if(a.state!='dead')a.hp=a.max;down=false;adsOn=false;waveBreakTime=WAVE_BREAK_DURATION;updateWaveHud()}
+function updateWaveBreak(dt){if(!worldRunning()||waveBreakTime<=0)return;waveBreakTime=Math.max(0,waveBreakTime-dt);if(waveBreakTime<1e-7){waveBreakTime=0;topUp();reloading=0;startWave()}}
 function nearArmory(){return onWall()&&Math.hypot(px-ARMORY.x,pz-ARMORY.z)<3.8}
 function showArmory(){state='shop';renderShop();$('ovDone').classList.remove('on');$('ovShop').classList.add('on');$('armoryPrompt').style.display='none'}
 function openArmory(){if(state!=='play'||!nearArmory()||upg.on||knifeTime>0||grenadeTime>0)return;suppressConsoleUnlock=true;clearPlayerInput();showArmory();document.exitPointerLock&&document.exitPointerLock()}
 function closeArmory(){if(state!=='shop')return;$('ovShop').classList.remove('on');clearPlayerInput();suppressConsoleUnlock=true;state='play';last=performance.now();lock()}
+let liveArmoryKey='';
+function updateLiveArmory(){if(state!=='shop')return;
+ const key=[goldText(),wave,shStock,shOn,shNextBuyWave,A.filter(a=>a.state!=='dead').map(a=>a.kind).sort().join(','),ORD.map(k=>(rsv[k]||0)+':'+magOf(k)).join(',')].join('|');
+ if(key!==liveArmoryKey){liveArmoryKey=key;renderShop()}
+}
 function updateArmoryPrompt(){$('armoryPrompt').style.display=state==='play'&&nearArmory()&&!upg.on&&!knifeTime&&!grenadeTime?'block':'none'}
 
 let mX=innerWidth/2,mY=innerHeight/2;
@@ -1460,7 +1466,7 @@ function gh(x,z){let h=0;if(Math.abs(x)<35&&Math.abs(z)<1.5)h=6;
  for(const cx of[-43,-35])for(const cz of[-4,4]){part(new THREE.CylinderGeometry(1.25,1.4,6.2,12),stone,cx,9.1,cz,1,1,1,scene);part(new THREE.CylinderGeometry(1.5,1.5,.4,12),lm,cx,12.3,cz,1,1,1,scene);part(new THREE.ConeGeometry(1.8,3.2,12),roof,cx,14.1,cz,1,1,1,scene)}
  B(stone,-39,6.8,4,6.4,1.6,.6);B(stone,-43,6.8,0,.6,1.6,6.4);B(stone,-35,6.8,-2.1,.6,1.6,1.2);B(stone,-35,6.8,2.1,.6,1.6,1.2);B(stone,-41.4,6.8,-4,.7,1.6,.6);B(stone,-36.6,6.8,-4,.7,1.6,.6);
  for(let i=1;i<=11;i++){const h=6-i*.5,cz=-4-(i-.5)*.9;B(stone,-39,h/2,cz,4,h,.9);B(lm,-39,h+.02,cz,4,.05,.9);for(const x of[-41.25,-36.75])B(stone,x,(h+1.5)/2,cz,.5,h+1.5,.9)}
- const sg=nameTag('Trap ↓');sg.scale.set(3.4,.85,1);sg.position.set(-39,8.6,-4.3);scene.add(sg)}
+}
 // Armory opposite the stair entrance on the left castle platform.
 const ARMORY={x:-39,z:2.35};
 const armoryStand=new THREE.Group();armoryStand.name='armoryStand';armoryStand.position.set(ARMORY.x,6,ARMORY.z);scene.add(armoryStand);
@@ -1470,7 +1476,7 @@ const armoryStand=new THREE.Group();armoryStand.name='armoryStand';armoryStand.p
  box(wood,0,.65,1.25,5.6,1.3,.12);box(cloth,0,3.05,0,6,.16,3.2);for(const x of[-2,-1,0,1,2])box(brass,x,3.15,0,.08,.06,3.2);
  for(const x of[-1.6,0,1.6]){const rack=new THREE.Group();rack.position.set(x,1.8,.5);armoryStand.add(rack);addAllyM14(rack);const rifle=rack.getObjectByName('M14');rifle.position.set(0,0,0);rifle.rotation.set(Math.PI/2,0,.12)}
  for(const x of[-1.9,1.9]){box(wood,x,.22,-.1,.65,.44,.6);box(brass,x,.47,-.1,.68,.04,.63)}
- const seller=makeEnemy(false,4);hideTri(seller.g);seller.g.name='armoryVendor';seller.g.position.set(.65,0,0);seller.g.rotation.y=Math.PI;seller.aR.rotation.x=-.3;armoryStand.add(seller.g);
+ const seller=makeEnemy(false,4);hideTri(seller.g);seller.g.name='armoryVendor';seller.g.position.set(0,0,0);seller.g.rotation.y=Math.PI;seller.aR.rotation.x=-.3;armoryStand.add(seller.g);
  const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#241a12';ctx.fillRect(0,0,512,128);ctx.strokeStyle='#d4a843';ctx.lineWidth=8;ctx.strokeRect(4,4,504,120);ctx.font='bold 68px Georgia';ctx.textAlign='center';ctx.fillStyle='#f4d17a';ctx.fillText('ARMORY',256,88);const sign=new THREE.Mesh(new THREE.PlaneGeometry(3.7,.92),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),side:THREE.DoubleSide}));sign.position.set(0,2.55,-1.48);sign.rotation.y=Math.PI;armoryStand.add(sign);
 }
 const SPD=9,PLAYER_RADIUS=.38,PLAYER_BOUNDS={left:-54,right:42,back:.9,front:-105},MAX_LOW_PROP=1.5,WALK_OVER_PROP=.35;
@@ -1551,13 +1557,13 @@ eA.push((dt,t)=>{const c=upg.on?upg.charge:0;upFx.vig.style.opacity=upg.on&&upg.
  if(state=='play')drawTab()});
 // loop
 let last=performance.now(),tt=0;
-function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='menu'){last=now;return}const dt=['pause','confirmLeave','shop'].includes(state)?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
+function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='menu'){last=now;return}const dt=['pause','confirmLeave'].includes(state)?0:Math.min(.05,(now-last)/1000);last=now;tt+=dt;waterAnim(dt);
  {ads+=((adsOn&&state=='play'&&!grenadeTime&&!reloading&&!sprinting?1:0)-ads)*Math.min(1,dt*12);const f=baseFov+(ZF[cur]-baseFov)*ads+upFov;if(Math.abs(f-cam.fov)>.01){cam.fov=f;cam.updateProjectionMatrix()}$('scope').style.opacity=cur=='sniper'?Math.max(0,ads*1.4-.4):0;gun.visible=!(cur=='sniper'&&ads>.75);$('cross').style.opacity=cur==='sniper'?1-ads*.7:1-ads}
- if(state=='play'){
-  updateWaveBreak(dt);updateShieldPowerups(dt);const s=st();if(infiniteAmmo()){ammo=s.mag;reloading=0}if(isGod()){php=100;hp=CASTLE_MAX_HP;}movePlayer(dt,upg.on);regeneratePlayer(dt);
+ if(worldRunning()){
+  updateWaveBreak(dt);updateShieldPowerups(dt);const s=st();if(infiniteAmmo()){ammo=s.mag;reloading=0}if(isGod()){php=100;hp=CASTLE_MAX_HP;}movePlayer(dt,upg.on||state==='shop');regeneratePlayer(dt);
   cd-=dt;if(reloading>0){reloading-=dt;if(reloading<=0){reloading=0;{const t=Math.min(s.mag-ammo,rsv[cur]||0);if(t>0){ammo+=t;rsv[cur]-=t}}SFX.click()}}
   if(ammo<=0&&!reloading)reload();
-  if(down&&!reloading&&cd<=0&&ammo>0&&!upg.on)shoot();
+  if(state==='play'&&down&&!reloading&&cd<=0&&ammo>0&&!upg.on)shoot();
   if(!enemiesFrozen()&&list.length){spawnT-=dt;if(spawnT<=0){spawn(list.pop());spawnT=Math.max(.3,2.2-wave*.12)*(.6+R()*.8)}}
   for(const e of E){const g=e.g;
    if(e.state=='dead'){e.dt+=dt;if(e.fly){g.position.y-=dt*28;g.rotation.z+=dt*5}else g.rotation.x=-Math.min(e.dt*3,1)*1.5;continue}
@@ -1569,7 +1575,7 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
   for(let i=E.length-1;i>=0;i--)if(E[i].state=='dead'&&E[i].dt>6){scene.remove(E[i].g);E.splice(i,1)}
   if(!enemiesFrozen()){if(waveBreakTime<=0)updVolcano(dt);updBombs(dt,s)}updAllies(dt);updShield(dt);updG(dt);updStreak(dt);separateUnits();
   const alive=E.filter(e=>e.state!='dead').length;
-  if(hp<=0||php<=0){hp=Math.max(0,hp);state='over';suspendedState=null;updateContinueButton();document.exitPointerLock&&document.exitPointerLock();saveHS();$('ovT').textContent=(php<=0?'Je werd in het veld gedood op golf ':'Je hield stand tot golf ')+wave+' en doodde '+kills+' vijanden. '+(wave>prevBest?'Nieuw record!':'Record: golf '+hs.wave+'.');showHS();$('ovOver').classList.add('on')}
+  if(hp<=0||php<=0){$('ovShop').classList.remove('on');hp=Math.max(0,hp);state='over';suspendedState=null;updateContinueButton();document.exitPointerLock&&document.exitPointerLock();saveHS();$('ovT').textContent=(php<=0?'Je werd in het veld gedood op golf ':'Je hield stand tot golf ')+wave+' en doodde '+kills+' vijanden. '+(wave>prevBest?'Nieuw record!':'Record: golf '+hs.wave+'.');showHS();$('ovOver').classList.add('on')}
   else if(!list.length&&!alive)endWave();
   {const c={2:0,3:0,4:0,5:0,6:0,8:0,9:0};for(const a of A)if(a.state!='dead')c[a.kind]++;$('side').innerHTML='Ridders <b style="color:var(--ink)">'+c[2]+'/15</b><br>Paarden <b style="color:var(--ink)">'+c[3]+'/15</b><br>Schutters <b style="color:var(--ink)">'+c[4]+'/10</b>'+extraSide()}{const bo=E.find(e=>e.boss&&e.state!='dead');$('bossb').style.display=bo?'block':'none';if(bo){$('bossn').textContent=bo.name;$('bossh').style.width=Math.max(0,bo.hp/bo.mx*100)+'%'}}
   $('cross').classList.toggle('mg',cur=='minigun');$('hpb').style.width=(hp/CASTLE_MAX_HP*100)+'%';$('pl').style.display='block';$('phb').style.width=Math.max(0,php)+'%';$('pht').textContent=Math.ceil(Math.max(0,php));$('hpt').textContent=Math.ceil(hp);$('gd').textContent=goldText();$('am').textContent=infiniteAmmo()?'∞':ammo;$('mg').textContent=infiniteAmmo()?'∞':rsv[cur]||0;updateWeaponHud();
@@ -1587,7 +1593,7 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
  hmv=Math.max(0,hmv-dt*5);$('hm').style.opacity=hmv;flv=Math.max(0,flv-dt*2.5);$('flash').style.opacity=Math.max(flv,healthVignette(dt));
  shake*=.88;cG.position.x*=.8;
  cam.position.set(px+(R()-.5)*shake,cyv+1.7+(R()-.5)*shake*.6,pz+(R()-.5)*shake*.4);cam.rotation.set(pitch,yaw,0);updSky(dt);XT(dt,tt);for(const f of eA)f(dt,tt);
- updateEnemyHealthBars();updateArmoryPrompt();ren.render(scene,cam)}
+ updateEnemyHealthBars();updateArmoryPrompt();updateLiveArmory();ren.render(scene,cam)}
 // Photograph the actual enemy castle for the main menu; no external image needed.
 {const photoCam=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,1200);photoCam.position.set(32,23,-65);photoCam.lookAt(0,10,-130);gun.visible=false;ren.render(scene,photoCam);$('ovStart').style.setProperty('--castle-photo','url("'+ren.domElement.toDataURL('image/jpeg',.9)+'")');gun.visible=true}
 requestAnimationFrame(frame);
