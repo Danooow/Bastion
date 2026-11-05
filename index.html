@@ -481,6 +481,7 @@ function getFantasyAssets(){
   skin:material(0x638d34),skinDark:material(0x3e642a),skinLight:material(0x7e9d48),troll:material(0x65715a,.98,0,true),trollDark:material(0x414e3c,.95,0,true),
   leather:material(0x493225),strap:material(0x735037),iron:material(0x61696b,.55,.65),blade:material(0xb0b9b3,.38,.65),ivory:material(0xd5ccb0),black:material(0x181e18),wood:material(0x513a24,.98,0,true),woodEnd:material(0x9b8155,.95,0,true),
   fur:material(0x515d65,.98,0,true),furDark:material(0x303a43,.98,0,true),furLight:material(0x87918d,.95),gold:material(0xffd249,.34,.8),
+  wolfEye:new THREE.MeshStandardMaterial({color:0xff0909,emissive:0xff0000,emissiveIntensity:1.4,roughness:.3,toneMapped:false}),
   eye:new THREE.MeshStandardMaterial({color:0xffbd39,emissive:0xff941b,emissiveIntensity:.7,roughness:.4}),
   golems:[{stone:material(0x788778,.95,0,true),dark:material(0x3c4d43,.98,0,true),moss:material(0x506334,.98),crystal:material(0x55caff,.25,.28)},
    {stone:material(0x6f657f,.88,.05,true),dark:material(0x393244,.95,0,true),moss:material(0x8c789f,.8,.1),crystal:material(0xc37bff,.25,.28)},
@@ -496,14 +497,14 @@ function makeFantasyEnemy(type='goblin',variant=0){
  const tooth=(parent,x,y,z,size,up=true)=>{const t=mesh(m.crystal,m.ivory,x,y,z,size*.3,size,size*.3,parent);if(!up)t.rotation.z=Math.PI;return t};
  const tagRoot=()=>g.traverse(o=>{o.userData.root=g});
  if(type==='wolf'){
-  const torso=ball(m.fur,0,.96,-.08,.48,.48,.94);torso.name='wolfBody';ball(m.furDark,0,1.14,.48,.51,.5,.47);ball(m.furLight,0,.94,.67,.33,.36,.24);
-  head.position.set(0,1.32,.72);head.rotation.x=-.08;ball(m.fur,0,.09,.16,.34,.34,.4,head);ball(m.furLight,0,-.02,.48,.22,.16,.34,head);ball(m.black,0,.015,.76,.17,.095,.1,head);
-  const jaw=joint('wolfJaw',head,0,-.13,.24);ball(m.furDark,0,-.025,.24,.19,.09,.32,jaw);for(const s of[-1,1]){for(let i=0;i<3;i++)tooth(jaw,s*.15,.06,.14+i*.13,.055);tooth(head,s*.16,-.065,.43,.095,false);const ear=mesh(m.crystal,m.furDark,s*.235,.45,.02,.15,.38,.16,head);ear.rotation.z=-s*.28;mesh(m.crystal,m.leather,s*.235,.46,.055,.085,.23,.08,head).rotation.z=-s*.28;ball(m.eye,s*.265,.17,.39,.058,.045,.036,head);ball(m.black,s*.278,.17,.414,.014,.036,.012,head)}
+  const torso=rock(m.fur,0,.96,-.08,.48,.48,.94);torso.name='wolfBody';rock(m.furDark,0,1.14,.48,.51,.5,.47);rock(m.furLight,0,.94,.67,.33,.36,.24);
+  head.position.set(0,1.32,.72);head.rotation.x=-.08;rock(m.fur,0,.09,.16,.34,.34,.4,head);rock(m.furLight,0,-.02,.48,.22,.16,.34,head);ball(m.black,0,.015,.76,.17,.095,.1,head);
+  const jaw=joint('wolfJaw',head,0,-.13,.24);rock(m.furDark,0,-.025,.24,.19,.09,.32,jaw);for(const s of[-1,1]){for(let i=0;i<4;i++)tooth(jaw,s*.15,.06,.10+i*.13,.075);tooth(head,s*.16,-.065,.43,.14,false);const ear=mesh(m.crystal,m.furDark,s*.235,.45,.02,.15,.38,.16,head);ear.rotation.z=-s*.28;mesh(m.crystal,m.leather,s*.235,.46,.055,.085,.23,.08,head).rotation.z=-s*.28;ball(m.wolfEye,s*.265,.17,.39,.063,.034,.036,head);ball(m.black,s*.278,.17,.423,.012,.026,.008,head);const brow=rock(m.furDark,s*.24,.235,.39,.135,.055,.085,head);brow.rotation.z=s*.35}
   for(let i=0;i<7;i++)mesh(m.facet,m.furDark,(i%2?-.12:.12),1.4-i*.025,.37-i*.18,.17,.18,.22).rotation.x=-.4;
   const legs=[];for(const [i,[x,z]] of [[-.32,.58],[.32,.58],[-.32,-.65],[.32,-.65]].entries()){
-   const leg=joint('wolfLeg'+i,b,x,.93,z),knee=joint('wolfKnee'+i,leg,0,-.38,i<2?.035:-.13);ball(m.fur,0,-.2,0,.14,.27,.15,leg);ball(m.furDark,0,0,0,.12,.12,.12,knee);taper(m.fur,[0,0,0],[0,-.35,.10],.095,.065,knee);const paw=joint('wolfPaw'+i,knee,0,-.43,.14);ball(m.furDark,0,0,.03,.115,.085,.17,paw);for(let j=-1;j<=1;j++)ball(m.ivory,j*.057,-.015,.17,.02,.025,.05,paw);legs.push(leg);knees.push(knee);paws.push(paw)
+   const leg=joint('wolfLeg'+i,b,x,.93,z),knee=joint('wolfKnee'+i,leg,0,-.38,i<2?.035:-.13);rock(m.fur,0,-.2,0,.14,.27,.15,leg);rock(m.furDark,0,0,0,.12,.12,.12,knee);taper(m.fur,[0,0,0],[0,-.35,.10],.095,.065,knee);const paw=joint('wolfPaw'+i,knee,0,-.43,.14);rock(m.furDark,0,0,.03,.115,.085,.17,paw);for(let j=-1;j<=1;j++)ball(m.ivory,j*.057,-.015,.17,.02,.025,.05,paw);legs.push(leg);knees.push(knee);paws.push(paw)
   }
-  const tail=joint('wolfTail',b,0,1.12,-.88);taper(m.furDark,[0,0,0],[0,-.18,-.65],.16,.07,tail);ball(m.furLight,0,-.2,-.64,.08,.09,.14,tail);
+  const tail=joint('wolfTail',b,0,1.12,-.88);taper(m.furDark,[0,0,0],[0,-.18,-.65],.16,.07,tail);rock(m.furLight,0,-.2,-.64,.08,.09,.14,tail);
   tagRoot();return{g,b,lL:legs[0],lR:legs[1],aL:legs[2],aR:legs[3],off:0,hl:null,rig:{type,knees,elbows,paws,legs,tail,jaw,head}};
  }
  const isTroll=type==='troll',isGolem=type==='golem',p=isGolem?m.golems[variant]:null,skin=isGolem?p.stone:isTroll?m.troll:m.skin,dark=isGolem?p.dark:isTroll?m.trollDark:m.skinDark;
@@ -554,8 +555,32 @@ function makeFantasyEnemy(type='goblin',variant=0){
    mesh(gB,m.strap,0,1.24,.28,.1,.65,.035).rotation.z=.55;
   }
  }
- const off=0;g.scale.setScalar(isTroll?2.3:1);tagRoot();return{g,b,lL:legs[0],lR:legs[1],aL:arms[0],aR:arms[1],off,hl:null,rig:{type,knees,elbows,head}};
+ const torso=joint('upperBody',b,0,.88,0);for(const child of [...b.children])if(child!==torso&&!legs.includes(child)){child.position.y-=.88;torso.add(child)}
+ const off=0;g.scale.setScalar(isTroll?2.3:1);tagRoot();return{g,b,lL:legs[0],lR:legs[1],aL:arms[0],aR:arms[1],off,hl:null,rig:{type,knees,elbows,head,torso}};
 }
+// Heavy blows deal damage once at impact, after a visible wind-up.
+function heavyStrike(e,dt,target,impact){
+ e.heavyInRange=true;let a=e.heavyAttack;
+ if(!a||a.target!==target){a=e.heavyAttack={target,time:0,duration:e.boss?3.2/enemyAttackSpeed():enemyAttackInterval(e,typeof target==='string'?target:'ally'),hit:false}}
+ const previous=a.time/a.duration;a.time+=dt;const phase=Math.min(1,a.time/a.duration);
+ if(!a.hit&&previous<.68&&phase>=.68){a.hit=true;impact();if(e.boss){shake=Math.max(shake,.7);SFX.castle()}else{shake=Math.max(shake,.15);SFX.hit()}}
+ if(phase>=1){a.time%=a.duration;a.hit=false}
+}
+function poseHeavyStrike(e){
+ const o=e.o,rig=o.rig,a=e.heavyAttack;if(!rig||!a||!e.heavyInRange){if(a)e.heavyAttack=null;if(rig?.torso)rig.torso.rotation.x=0;const club=o.g.getObjectByName('trollClub');if(club)club.rotation.x=-.7;return}
+ const t=Math.min(1,a.time/a.duration),ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)},raise=ease(t/.57),slam=ease((t-.57)/.11),recover=ease((t-.74)/.26),lift=raise*(1-slam),bend=slam*(1-recover);
+ o.lL.rotation.x=o.lR.rotation.x=0;rig.torso.rotation.x=(e.boss?.32:.65)*bend;o.b.position.y=o.off-bend*(e.boss?.08:.15);
+ if(e.boss){o.aL.rotation.x=o.aR.rotation.x=-2.75*lift-.85*bend;o.aL.rotation.z=.12+.12*lift;o.aR.rotation.z=-.12-.12*lift;rig.elbows.forEach(j=>j.rotation.x=-.2-.5*lift)}
+ else{o.aR.rotation.x=-2.65*lift-1.0*bend;o.aL.rotation.x=-.45*lift-.35*bend;rig.elbows[1].rotation.x=-.3-.65*lift;rig.elbows[0].rotation.x=-.25-.4*lift;const club=o.g.getObjectByName('trollClub');if(club)club.rotation.x=-.7+2.73*lift+1.75*bend}
+ rig.knees.forEach(j=>j.rotation.x=.08+.3*bend);
+}
+function attackCastle(e,dt,s){
+ e.castleCommitted=true;const g=e.g,o=e.o;face(g,e.wallTarget.x,0);g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);o.lL.rotation.x=o.lR.rotation.x=0;
+ const impact=()=>{if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,shOn?SHC.z-SHR.z*.9:14),shOn?0x66ddff:0xffee88);if(shOn)return;damageCastle(e.dmg*s.arm);damageFeedback();if(e.boss)blood(new THREE.Vector3(g.position.x,7,g.position.z+3),24,1.6)};
+ if(e.boss||o.rig?.type==='troll'){heavyStrike(e,dt,'castle',impact);return}
+ o.aR.rotation.x=-1.6-Math.sin(e.t*6)*1.1;o.aL.rotation.x=-.4;e.atk-=dt;if(e.atk<=0){e.atk=enemyAttackInterval(e,'castle');impact()}
+}
+
 function updateFantasyPose(e,dt){
  const o=e.o,rig=o.rig;if(!rig||e.state==='dead')return;const point=e.g.position,last=o.lastPosePosition;const moving=!!last&&Math.hypot(point.x-last.x,point.z-last.z)>.001;if(!last)o.lastPosePosition=point.clone();else last.copy(point);
  if(rig.type==='wolf'){
@@ -564,6 +589,7 @@ function updateFantasyPose(e,dt){
  }
  for(let i=0;i<2;i++){const leg=i?o.lR:o.lL;rig.knees[i].rotation.x=.08+Math.max(0,-leg.rotation.x)*.95;rig.elbows[i].rotation.x=-.22-Math.max(0,-(i?o.aR:o.aL).rotation.x)*.45}
  if(rig.type==='golem'){o.aL.rotation.z=.1;o.aR.rotation.z=-.1;rig.head.rotation.y=Math.sin(e.t*.7)*.04}else if(rig.type==='troll'){o.aL.rotation.z=.15;o.aR.rotation.z=-.12}
+ if(e.boss||rig.type==='troll')poseHeavyStrike(e);
 }
 
 function makeEnemy(giant,kind=0){return kind>=2&&kind<=4?makeAllyModel(giant,kind):makeFantasyEnemy(kind===7?'wolf':giant?'troll':'goblin')}
@@ -786,7 +812,7 @@ function spawnGold(){if(goldSpawnedThisWave)return;if(queueEnemyIfFull(12))retur
 function spawn(k){if(k==5||k==13)return;if(queueEnemyIfFull(k))return;if(k>=9&&k<=11)return spawnBoss(k-9);if(k==12)return spawnGold();if(k==8)return spawnDragon();const giant=k==1,m=1+.15*(wave-1),o=makeEnemy(giant,k),rg=k==6;const e={o,g:o.g,normalSoldier:k===0,giant,rng:rg,rt:k==6?3.5:2,horse:k==7,hp:(giant?260:k==7?90:k==6?35:k===0?52:40)*m,sp:((giant?1.5:k==7?6:2.5)+Math.min(wave*.1,2.2))*(.85+R()*.3),dmg:giant||k==6?20:10,stop:giant?-4.4:k==6?-70-R()*12:k==7?-3.2-R()*3:-2.7-R()*3.5,state:'walk',t:R()*9,atk:R()};
  o.g.position.set([-24,0,24][R()*3|0]+(R()-.5)*7,0,-134);o.g.userData.e=e;scene.add(o.g);prepareEnemy(e);E.push(e)}
 function inWalkableField(p){return p.z>=PLAYER_BOUNDS.front&&p.z<=-1.8&&p.x>=PLAYER_BOUNDS.left+PLAYER_RADIUS&&p.x<=playerRightEdge(p.z)-PLAYER_RADIUS&&!OBS.some(o=>o.h>MAX_LOW_PROP&&Math.hypot(p.x-o.x,p.z-o.z)<o.r+PLAYER_RADIUS)}
-function kill(e,hs){if(e.state==='dead')return;if(!suppressPowerupDrops&&e.normalSoldier&&inWalkableField(e.g.position)){const drop=choosePowerupDrop();if(drop)spawnChosenPowerup(drop,e.g.position.clone())}e.state='dead';e.dt=0;hideTri(e.g);if(!e.fly)e.g.position.y=.15*e.g.scale.x;const g=e.giant;gold+=Math.round((e.fly?45:e.rng?18:e.horse?25:g?60:12)*st().loot);kills++;if(e.boss)gold+=300+wave*20;if(e.gold)gold+=500;SFX.die(g);if(e.fly)blood(e.g.position.clone(),36,1.6,fm);else{blood(new THREE.Vector3(e.g.position.x,(g?3:1.4),e.g.position.z),g?40:22,g?1.6:1.2);decal(e.g.position.x,e.g.position.z-.8,g?3:1.3)}SFX.coin()}
+function kill(e,hs){if(e.state==='dead')return;const bossBlast=e.boss?e.g.position.clone().setY(1):null;if(!suppressPowerupDrops&&e.normalSoldier&&inWalkableField(e.g.position)){const drop=choosePowerupDrop();if(drop)spawnChosenPowerup(drop,e.g.position.clone())}e.state='dead';e.dt=0;hideTri(e.g);if(!e.fly)e.g.position.y=.15*e.g.scale.x;const g=e.giant;gold+=Math.round((e.fly?45:e.rng?18:e.horse?25:g?60:12)*st().loot);kills++;if(e.boss)gold+=300+wave*20;if(e.gold)gold+=500;SFX.die(g);if(e.fly)blood(e.g.position.clone(),36,1.6,fm);else{blood(new THREE.Vector3(e.g.position.x,(g?3:1.4),e.g.position.z),g?40:22,g?1.6:1.2);decal(e.g.position.x,e.g.position.z-.8,g?3:1.3)}SFX.coin();if(bossBlast){e.g.visible=false;boom(bossBlast,9,1000)}}
 const ray=new THREE.Raycaster();
 const fm=[0xff8a00,0xffd23a,0x2a2a2a].map(c=>new THREE.MeshBasicMaterial({color:c}));
 const gTri=new THREE.ConeGeometry(.28,.45,3);gTri.rotateX(Math.PI);const triR=new THREE.MeshBasicMaterial({color:0xff2222,fog:false}),triB=new THREE.MeshBasicMaterial({color:0x2a7bff,fog:false});
@@ -860,13 +886,14 @@ function updBombs(dt,s){for(let i=B.length-1;i>=0;i--){const b=B[i];b.vy-=20*dt;
 // obstakels: lage dingen springt men over, hoge dingen loopt men omheen
 function bumpY(p,step){let y=0;for(const o of OBS){if(o.h>step)continue;const d=Math.hypot(o.x-p.x,o.z-p.z),r=o.r+.9;if(d<r){const k=Math.cos(d/r*1.5708);y=Math.max(y,(o.h*.9+.3)*k*k)}}return y}
 const pGnd=()=>state=='play'&&py<4.5&&pz<-1.8;
-function chasePl(e,dt){if(resurrectionTime>0||!pGnd()||e.fly)return false;const g=e.g,o=e.o,dx=px-g.position.x,dz=pz-g.position.z,d=Math.hypot(dx,dz),rg=e.rng;if(d>(rg?30:24))return false;
+function chasePl(e,dt){if(e.boss||e.castleCommitted)return false;if(resurrectionTime>0||!pGnd()||e.fly)return false;const g=e.g,o=e.o,dx=px-g.position.x,dz=pz-g.position.z,d=Math.hypot(dx,dz),rg=e.rng;if(d>(rg?30:24))return false;
  const gs=e.giant?1.6:e.horse?1.1:.85,reach=rg?13:e.giant?2.8:e.horse?2.6:1.9,stop=rg?13:Math.min(reach,unitRadius(e)+PLAYER_RADIUS+.15);let moving=false;
  if(d>stop){const hd=walkTo(g.position,px,pz,e.sp,dt,e.giant?1.6:e.horse?.9:.5,gs);if(hd===null&&d>reach)return false;if(hd!==null){g.rotation.y+=(((hd-g.rotation.y+9.4248)%6.2832)-3.1416)*Math.min(1,dt*8);gait(o,e.t,e.sp*2.6);moving=true}}
  if(!moving){g.rotation.y+=(((Math.atan2(dx,dz)-g.rotation.y+9.4248)%6.2832)-3.1416)*Math.min(1,dt*10);o.lL.rotation.x=o.lR.rotation.x=0}g.position.y=bumpY(g.position,gs);
  if(Math.hypot(px-g.position.x,pz-g.position.z)>reach)return true;
- o.aR.rotation.x=-1.6-Math.sin(e.t*7)*1.1;o.aL.rotation.x=-.4;
- e.pa=(e.pa===undefined?enemyFirstAttackDelay():e.pa)-dt;if(e.pa<=0){e.pa=enemyAttackInterval(e,'player');damagePlayer(e.playerDmg);damageFeedback();if(rg)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(px,cyv+1.2,pz),0xffee88)}
+ const impact=()=>{damagePlayer(e.playerDmg);damageFeedback();if(rg)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(px,cyv+1.2,pz),0xffee88)};
+ if(o.rig?.type==='troll')heavyStrike(e,dt,'player',impact);else{o.aR.rotation.x=-1.6-Math.sin(e.t*7)*1.1;o.aL.rotation.x=-.4;e.pa=(e.pa===undefined?enemyFirstAttackDelay():e.pa)-dt;if(e.pa<=0){e.pa=enemyAttackInterval(e,'player');impact()}}
+
  return true}
 // Cached routes replace local steering, which can oscillate between nearby props.
 const walkRoutes=new WeakMap();
@@ -983,8 +1010,8 @@ function walkTo(p,tx,tz,sp,dt,rad,step){
  if(d)moveCrowdedUnit(p,dx/d*travel,dz/d*travel,rad,step)
  return Math.atan2(dx,dz);
 }
-function foe(e){const g=e.g;let best=null,bd=e.rng?(e.stop<-60?55:32):3.2*(e.giant?1.6:1);for(const a of A){if(a.state=='dead'||a.tw)continue;if(!e.rng&&a.wall)continue;const d=Math.hypot(a.g.position.x-g.position.x,a.g.position.z-g.position.z)-(a.tower?3.3:0);if(d<bd){bd=d;best=a}}return best}
-function fightAlly(e,a,dt){const g=e.g,o=e.o,q=a.g.position,stop=e.rng?13:unitRadius(e)+unitRadius(a)+(a.tower?3.3:.15);face(g,q.x,q.z);if(Math.hypot(q.x-g.position.x,q.z-g.position.z)>stop){walkTo(g.position,q.x,q.z,e.sp,dt,unitRadius(e),e.giant?1.6:e.horse?1.1:.85);gait(o,e.t,e.sp*2.6)}else o.lL.rotation.x=o.lR.rotation.x=0;o.aR.rotation.x=-1.6-Math.sin(e.t*6)*1.1;e.atk-=dt;if(e.atk<=0){e.atk=enemyAttackInterval(e,'ally');a.hp-=e.dmg;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(q.x,q.y+1.2,q.z),0xffaa88);blood(new THREE.Vector3(q.x,q.y+1.2,q.z),5);SFX.hit();if(a.hp<=0){a.state='dead';a.dt=0;hideTri(a.g)}}}
+function foe(e){if(e.boss||e.castleCommitted)return null;const g=e.g;let best=null,bd=e.rng?(e.stop<-60?55:32):3.2*(e.giant?1.6:1);for(const a of A){if(a.state=='dead'||a.tw)continue;if(!e.rng&&a.wall)continue;const d=Math.hypot(a.g.position.x-g.position.x,a.g.position.z-g.position.z)-(a.tower?3.3:0);if(d<bd){bd=d;best=a}}return best}
+function fightAlly(e,a,dt){const g=e.g,o=e.o,q=a.g.position,stop=e.rng?13:unitRadius(e)+unitRadius(a)+(a.tower?3.3:.15);face(g,q.x,q.z);if(Math.hypot(q.x-g.position.x,q.z-g.position.z)>stop){walkTo(g.position,q.x,q.z,e.sp,dt,unitRadius(e),e.giant?1.6:e.horse?1.1:.85);gait(o,e.t,e.sp*2.6)}else o.lL.rotation.x=o.lR.rotation.x=0;if(o.rig?.type==='troll'){if(Math.hypot(q.x-g.position.x,q.z-g.position.z)<=stop+.1)heavyStrike(e,dt,a,()=>{a.hp-=e.dmg;blood(new THREE.Vector3(q.x,q.y+1.2,q.z),5);if(a.hp<=0){a.state='dead';a.dt=0;hideTri(a.g)}});return}o.aR.rotation.x=-1.6-Math.sin(e.t*6)*1.1;e.atk-=dt;if(e.atk<=0){e.atk=enemyAttackInterval(e,'ally');a.hp-=e.dmg;if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(q.x,q.y+1.2,q.z),0xffaa88);blood(new THREE.Vector3(q.x,q.y+1.2,q.z),5);SFX.hit();if(a.hp<=0){a.state='dead';a.dt=0;hideTri(a.g)}}}
 function positionWallArchers(){const archers=A.filter(a=>a.wall&&!a.tw&&a.kind==4&&a.state!=='dead');const spacing=Math.min(7.6,60/Math.max(1,archers.length-1));archers.forEach((a,i)=>{a.wallAnchor={x:(i-(archers.length-1)/2)*spacing,y:7.46,z:1.4};a.g.position.set(a.wallAnchor.x,a.wallAnchor.y,a.wallAnchor.z)})}
 function spawnAlly(k){if(k==4&&A.filter(a=>a.kind==4&&a.state!=='dead').length>=MAXA[4])return;const o=makeEnemy(false,k),h=k==3?150:k==2?100:60,g=o.g,wall=k==4;const a={o,g,kind:k,hp:h,max:h,wall,sp:k==3?8:4.5,dmg:k==3?18:20,cd:R(),t:R()*9,state:'idle',hx:(R()-.5)*40,hz:-8-R()*4};g.position.set(wall?(R()-.5)*44:a.hx,wall?7.4:0,wall?1.25:a.hz);g.rotation.y=Math.PI;scene.add(g);a.bh=h;a.bd=a.dmg;allyStat(a);A.push(a);if(wall)positionWallArchers();SFX.coin()}
 function updAllies(dt){for(let i=A.length-1;i>=0;i--){const a=A[i],g=a.g,o=a.o,p=g.position;if(a.state=='dead'){a.dt+=dt;g.rotation.x=-Math.min(a.dt*3,1)*1.5;if(a.dt>4){scene.remove(g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}A.splice(i,1)}continue}
@@ -1924,9 +1951,10 @@ function frame(now){requestAnimationFrame(frame);if(state==='console'||state==='
   for(const e of E){const g=e.g;
    if(e.state=='dead'){e.dt+=dt;if(e.fly){g.position.y-=dt*28;g.rotation.z+=dt*5}else g.rotation.x=-Math.min(e.dt*3,1)*1.5;continue}
    if(enemiesFrozen())continue;
-   e.t+=dt;const o=e.o;if(e.fly){flyUpdate(e,dt);continue}if(chasePl(e,dt))continue;const ft=foe(e);if(ft){g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);fightAlly(e,ft,dt);continue}
+   e.heavyInRange=false;e.t+=dt;const o=e.o;if(!e.fly&&e.wallTarget&&Math.hypot(g.position.x-e.wallTarget.x,g.position.z-e.wallTarget.z)<=1.8)e.castleCommitted=true;if(e.fly){flyUpdate(e,dt);continue}if(chasePl(e,dt))continue;const ft=foe(e);if(ft){g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);fightAlly(e,ft,dt);continue}
    const walkingToWall=advanceToWall(e,dt);if(walkingToWall&&Math.hypot(g.position.x-e.wallTarget.x,g.position.z-e.wallTarget.z)>1.8)continue;
-   {face(g,e.wallTarget.x,0);g.position.y=bumpY(g.position,e.giant?1.6:e.horse?1.1:.85);if(!walkingToWall)o.lL.rotation.x=o.lR.rotation.x=0;const sw=Math.sin(e.t*6);o.aR.rotation.x=-1.6-sw*1.1;o.aL.rotation.x=-.4;e.atk-=dt;if(e.atk<=0&&shOn){e.atk=enemyAttackInterval(e,'castle');if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,SHC.z-SHR.z*.9),0x66ddff)}else if(e.atk<=0){e.atk=enemyAttackInterval(e,'castle');if(e.rng)tracer(new THREE.Vector3(g.position.x,1.6,g.position.z),new THREE.Vector3(g.position.x*.6,6,14),0xffee88);damageCastle(e.dmg*s.arm);if(e.boss){damageFeedback();blood(new THREE.Vector3(g.position.x,7,g.position.z+3),24,1.6)}else{damageFeedback(.5,.15)}}}}
+   attackCastle(e,dt,s);}
+
   for(const e of E)if(!enemiesFrozen())updateFantasyPose(e,dt);
   if(shOn&&!enemiesFrozen())for(const e of E)if(e.state!='dead'&&!e.fly&&!e.leap)pushOut(e.g.position);
   for(let i=E.length-1;i>=0;i--)if(E[i].state=='dead'&&E[i].dt>6){scene.remove(E[i].g);E.splice(i,1)}
