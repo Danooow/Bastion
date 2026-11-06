@@ -1820,30 +1820,74 @@ function makeReloadRig(k){
  if(k==='pistol'){const sight=gun.getObjectByName('weaponIronSights');if(sight)action.add(sight)}
  reloadRig={k,mag,action,hand,shell,belt,cover};hand.visible=shell.visible=false;belt.visible=k==='minigun';
 }
-let holdingMaterials=null;
+let holdingMaterials=null,handAnatomyGeometry=null;
+function anatomicalHandGeometry(){
+ if(handAnatomyGeometry)return handAnatomyGeometry;
+ const rings=[[-.100,.017,.029,.029],[-.077,.023,.043,.020],[-.033,.027,.052,.006],[.018,.028,.051,-.002],[.053,.023,.040,-.002],[.071,.012,.025,.002]],vertices=[],uv=[],indices=[],n=24;
+ for(let j=0;j<rings.length;j++)for(let i=0;i<=n;i++){const a=i/n*Math.PI*2,[y,rx,rz,z]=rings[j];vertices.push(Math.cos(a)*rx,y,z+Math.sin(a)*rz);uv.push(i/n,j/(rings.length-1));if(j<rings.length-1&&i<n){const k=j*(n+1)+i;indices.push(k,k+n+1,k+1,k+1,k+n+1,k+n+2)}}
+ // Close the wrist and metacarpal ends without the old spherical mitten silhouette.
+ for(const [row,reverse]of [[0,false],[rings.length-1,true]]){const c=vertices.length/3;vertices.push(0,rings[row][0],rings[row][3]);uv.push(.5,.5);for(let i=0;i<n;i++){const k=row*(n+1)+i;indices.push(c,reverse?k+1:k,reverse?k:k+1)}}
+ const palm=new THREE.BufferGeometry();palm.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));palm.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));palm.setIndex(indices);palm.computeVertexNormals();palm.scale(1.4,1.4,1.18);
+ handAnatomyGeometry={palm,joint:new THREE.SphereGeometry(1,20,12),bone:new THREE.CylinderGeometry(.90,1,1,12),sleeve:new THREE.CylinderGeometry(1,.85,1,18)};return handAnatomyGeometry;
+}
+function weaponHandMaterials(){
+ if(holdingMaterials)return holdingMaterials;const keep=color=>{const material=new THREE.MeshStandardMaterial({color,roughness:.84,metalness:0});material.userData.preserveFinish=true;return material};
+ return holdingMaterials={glove:keep(0x343c3d),pad:keep(0x46504d),skin:keep(0xb8896b),sleeve:keep(0x495447),cuff:keep(0x252e2b)};
+}
+function anatomicalGrip(parent,options){
+ const {glove,pad,skin,sleeve,cuff}=weaponHandMaterials(),geometry=anatomicalHandGeometry(),side=options.side||1,hx=options.halfWidth||.04,hz=options.halfDepth||.04;
+ const holder=new THREE.Group();holder.name=options.name||'triggerHand';holder.userData.handPose=options.clasp?'twoHandClasp':options.cradle?'underhandCradle':'pistolGrip';holder.userData.handedness=side;parent.add(holder);
+ const frame=new THREE.Group(),origin=new THREE.Vector3(...options.center),orientation=options.quaternion||new THREE.Quaternion().setFromEuler(new THREE.Euler(options.angle||0,0,0));frame.position.copy(origin);frame.quaternion.copy(orientation);holder.add(frame);
+ const palm=new THREE.Group(),offset=new THREE.Vector3(side*(hx+(options.clasp?.060:.040)),options.clasp?-.018:0,options.clasp?.012:0);palm.name='holdingPalm';palm.position.copy(offset);frame.add(palm);
+ const mesh=(geo,mat,x,y,z,sx=1,sy=1,sz=1,p=palm)=>part(geo,mat,x,y,z,sx,sy,sz,p),ball=(mat,x,y,z,sx,sy,sz,p=palm)=>mesh(geometry.joint,mat,x,y,z,sx,sy,sz,p);
+ const segment=(a,b,r1,r2,mat,p=palm,name='phalanx')=>{const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),d=end.clone().sub(start),bone=mesh(geometry.bone,mat,...start.clone().add(end).multiplyScalar(.5).toArray(),r1,d.length(),r2,p);bone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());bone.name=name;return bone};
+ mesh(geometry.palm,glove,0,0,0);ball(glove,-side*.016,.014,.035,.027,.053,.039);ball(pad,side*.035,-.015,.020,.010,.055,.040);
+ // Four distinct fingers with proximal, middle and distal phalanges and rounded joints.
+ const fingerNames=['indexFinger','middleFinger','ringFinger','littleFinger'],ys=[.048,.013,-.024,-.056],lengths=[.96,1,.94,.79],digits=[];
+ for(let f=0;f<4;f++){
+  const finger=new THREE.Group();finger.name=fingerNames[f];finger.userData.anatomicalDigit=true;palm.add(finger);const y=ys[f]*1.35,short=lengths[f],reach=hx*(options.clasp?1.14:1),front=-hz-.019;
+  let points=[[side*.015,y,-.020],[-side*.010,y-.001,front],[-side*(reach+.046)*short,y-.005,front-.004],[-side*(reach*2+.043)*short,y-.009,-hz+.012]];
+  if(f===3)points[3]=[-side*(reach+.036)*.9,y-.009,front-.003];
+  if(f===0&&options.trigger){const target=new THREE.Vector3(...options.trigger).sub(origin).applyQuaternion(orientation.clone().invert()).sub(offset);target.x+=side*.017;points=[[side*.012,y,-.018],[side*.018,y+.014,Math.min(-.055,target.z*.48)],[(target.x+side*.018)*.5,target.y+.008,target.z+.027],target.toArray()];finger.userData.triggerContact=target.toArray()}
+  const r=(f===3?.0155:.0185);for(let j=0;j<3;j++){segment(points[j],points[j+1],r*(1-j*.1),r*(.94-j*.11),glove,finger,['proximalPhalanx','middlePhalanx','distalPhalanx'][j]);const q=points[j];ball(j===0?pad:glove,q[0],q[1],q[2],r*1.06,r,r*1.05,finger)}
+  const tip=points[3];ball(glove,tip[0],tip[1],tip[2],r*.77,r*.78,r*.83,finger);finger.userData.tip=tip;digits.push(finger);
+  // Narrow knuckle protection follows each finger instead of one oversized pad.
+  ball(pad,side*.036,y,-.020,.012,.017,.020);const seam=segment([side*.041,y-.016,-.031],[side*.041,y-.016,-.006],.001,.001,cuff,palm,'gloveFingerSeam');seam.userData.visualOnly=true;
+ }
+ const thumb=new THREE.Group();thumb.name='thumb';thumb.userData.anatomicalDigit=true;palm.add(thumb);
+ let thumbPoints=[[-side*.006,.054,.037],[-side*(hx+.022),.093,hz+.011],[-side*(hx*2+.040),.065,hz-.006]];
+ if(options.clasp)thumbPoints=[[-side*.007,.054,.030],[-side*(hx*.48+.010),.090,-.036],[-side*(hx+.010),.087,-.116]];
+ ball(glove,-side*.014,.035,.037,.029,.044,.033);for(let j=0;j<2;j++){segment(thumbPoints[j],thumbPoints[j+1],.020-j*.002,.018-j*.002,glove,thumb,j?'thumbDistalPhalanx':'thumbProximalPhalanx');const q=thumbPoints[j];ball(glove,q[0],q[1],q[2],.020,.018,.020,thumb)}const end=thumbPoints[2];ball(glove,end[0],end[1],end[2],.016,.017,.018,thumb);
+ const wristLocal=new THREE.Vector3(0,-.139,.035).add(offset),wrist=wristLocal.clone().applyQuaternion(orientation).add(origin),elbow=new THREE.Vector3(...(options.elbow||(side>0?[.23,-.46,.38]:[-.34,-.46,.37]))),direction=elbow.clone().sub(wrist).normalize(),cuffEnd=wrist.clone().addScaledVector(direction,.060),sleeveStart=wrist.clone().addScaledVector(direction,.037);
+ segment(wrist.toArray(),cuffEnd.toArray(),.036,.040,glove,holder,'gloveWrist');segment(sleeveStart.toArray(),elbow.toArray(),.048,.084,sleeve,holder,'forearmSleeve');segment(sleeveStart.toArray(),cuffEnd.toArray(),.047,.050,cuff,holder,'wristCuff');
+ // Stitch lines and the small strap buckle sit on the back of the glove.
+ for(const z of[-.029,.054])segment([side*.041,-.087,z],[side*.041,.037,z],.0012,.0012,cuff,palm,'gloveStitch');ball(cuff,side*.035,-.108,.025,.010,.016,.031);
+ holder.userData.gripCenter=options.center.slice();holder.userData.gripHalfWidth=hx;holder.userData.gripHalfDepth=hz;return holder;
+}
 function buildWeaponHands(k){
- const previous=gun.getObjectByName('weaponHands');if(previous)gun.remove(previous);
- if(!holdingMaterials){const keep=(color)=>{const material=new THREE.MeshStandardMaterial({color,roughness:.85,metalness:0});material.userData.preserveFinish=true;return material};holdingMaterials={glove:keep(0x313b3e),pad:keep(0x465153),skin:keep(0xb8896b),sleeve:keep(0x495447),cuff:keep(0x252e2b)}}
- const group=new THREE.Group();group.name='weaponHands';gun.add(group);const {glove,pad,skin,sleeve,cuff}=holdingMaterials;
- const limb=(parent,a,b,r1,r2,material)=>{const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start),object=part(new THREE.CylinderGeometry(r1,r2,delta.length(),12),material,...start.clone().add(end).multiplyScalar(.5).toArray(),1,1,1,parent);object.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return object};
- function hand(anchor,side,support=false,parent=group,rotation=new THREE.Euler(-.18,0,0),trigger=true,elbowAnchor=null){
-  const holder=new THREE.Group();holder.name=support?'supportHand':'triggerHand';parent.add(holder);const palm=new THREE.Group();palm.position.set(...anchor);palm.rotation.copy(rotation);palm.scale.set(2.84,2.6,2.84);palm.name='holdingPalm';holder.add(palm);
-  part(gS,glove,0,0,.013,.032,.045,.025,palm);part(gS,pad,side*.008,.005,.033,.025,.032,.009,palm);
-  for(let i=0;i<4;i++){const y=.028-i*.019,points=[new THREE.Vector3(side*.019,y,.004),new THREE.Vector3(side*.027,y,-.024),new THREE.Vector3(-side*.018,y,-.039),new THREE.Vector3(-side*.072,y,-.019)];if(!support&&trigger&&i===0){points[1].set(side*.032,y+.015,-.044);points[2].set(side*.017,y+.019,-.087);points[3].set(side*.004,y+.012,-.106)}const curve=new THREE.CatmullRomCurve3(points);part(new THREE.TubeGeometry(curve,14,.0065,6,false),glove,0,0,0,1,1,1,palm);const tip=points[3];part(gS,skin,tip.x,tip.y,tip.z,.0067,.0065,.007,palm);part(gS,pad,points[0].x,y,.002,.008,.0075,.009,palm)}
-  limb(palm,[-side*.021,.022,.024],[-side*.048,.041,-.015],.01,.008,glove);part(gS,skin,-side*.048,.041,-.015,.0085,.008,.01,palm);
-  const wrist=new THREE.Vector3(0,-.057*2.6,.026*2.84).applyEuler(rotation).add(new THREE.Vector3(...anchor)),elbow=elbowAnchor?new THREE.Vector3(...elbowAnchor):new THREE.Vector3(side>0?.23:-.43,-.46,.35),direction=elbow.clone().sub(wrist).normalize(),sleeveStart=wrist.clone().addScaledVector(direction,.055),cuffEnd=wrist.clone().addScaledVector(direction,.075);
-  limb(holder,wrist.toArray(),sleeveStart.toArray(),.038,.048,skin);limb(holder,sleeveStart.toArray(),elbow.toArray(),.058,.089,sleeve);limb(holder,sleeveStart.toArray(),cuffEnd.toArray(),.061,.063,cuff);return holder;
- }
- // Two overlapping palms clasp the pistol grip; the minigun is cradled below its motor and barrel cage.
- const anchors={pistol:[.038,-.15,.125],shotgun:[.055,-.093,.197],smg:[.056,-.168,.146],sniper:[.057,-.165,.154],ak:[.057,-.168,.158],minigun:[.038,-.253,.08]};
- hand(anchors[k]||anchors.pistol,1,false,group,k==='minigun'?new THREE.Euler(0,0,Math.PI/2):new THREE.Euler(-.18,0,0),k!=='minigun',k==='pistol'?[.19,-.43,.38]:null);
+ weaponHandMaterials();const previous=gun.getObjectByName('weaponHands');if(previous)gun.remove(previous);const group=new THREE.Group();group.name='weaponHands';gun.add(group);
+ const grips={
+  pistol:{center:[0,-.177,.142],halfWidth:.043,halfDepth:.041,angle:-.23,trigger:[0,-.098,-.010]},
+  smg:{center:[0,-.207,.145],halfWidth:.038,halfDepth:.043,angle:-.27,trigger:[0,-.160,.033]},
+  ak:{center:[0,-.187,.147],halfWidth:.040,halfDepth:.040,angle:-.24,trigger:[0,-.123,.020]},
+  sniper:{center:[0,-.183,.146],halfWidth:.040,halfDepth:.039,angle:-.24,trigger:[0,-.132,.047]},
+  shotgun:{center:[0,-.065,.175],halfWidth:.049,halfDepth:.040,angle:-.56,trigger:[0,-.088,.052]}
+ };
+ const cradle=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(1,0,0)));
+ const rightCradle=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,-1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)));
+ // Both M134 hands cradle the fixed motor housing, clear of the spinning barrels.
+ if(k==='minigun')anatomicalGrip(group,{name:'triggerHand',side:1,center:[0,-.151,.085],halfWidth:.065,halfDepth:.064,quaternion:rightCradle,cradle:true,elbow:[.23,-.46,.39]});
+ else anatomicalGrip(group,{...grips[k],name:'triggerHand',side:1});
  if(!isDualPistol(k)){
-  if(k==='pistol')hand([-.038,-.155,.103],-1,true,group,new THREE.Euler(-.18,-.12,.08),false,[-.20,-.43,.38]);
-  else{const support={shotgun:[-.015,-.095,-.535],smg:[-.015,-.079,-.435],sniper:[-.017,-.075,-.44],ak:[-.016,-.088,-.46],minigun:[-.025,-.105,-.73]};hand(support[k],-1,true,k==='shotgun'?reloadRig.action:group,new THREE.Euler(0,0,-Math.PI/2),false,k==='minigun'?[-.28,-.46,.35]:null)}
+  if(k==='pistol')anatomicalGrip(group,{...grips.pistol,trigger:null,name:'supportHand',side:-1,clasp:true,elbow:[-.22,-.43,.38]});
+  else{const support={shotgun:{center:[0,-.034,-.54],halfWidth:.054,halfDepth:.058},smg:{center:[0,-.017,-.44],halfWidth:.052,halfDepth:.052},ak:{center:[0,-.020,-.455],halfWidth:.057,halfDepth:.060},sniper:{center:[0,-.025,-.43],halfWidth:.055,halfDepth:.059},minigun:{center:[0,-.151,-.210],halfWidth:.065,halfDepth:.067}};
+   anatomicalGrip(k==='shotgun'?reloadRig.action:group,{...support[k],name:'supportHand',side:-1,quaternion:cradle,cradle:true});
+  }
  }
- // The moving reload hand gets its own wrist and forearm.
- if(reloadRig&&reloadRig.hand){reloadRig.hand.scale.setScalar(1.3);for(const mesh of reloadRig.hand.children){mesh.position.multiplyScalar(2);mesh.scale.multiplyScalar(2)}limb(reloadRig.hand,[0,-.047,.048],[-.18,-.34,.27],.03,.052,sleeve);limb(reloadRig.hand,[0,-.047,.048],[-.024,-.083,.075],.029,.031,cuff)}
- if(!knifeView.getObjectByName('knifeHoldingHand')){const knifeHand=hand([.042,-.086,.018],1,false,knifeView,new THREE.Euler(-.1,0,0),false);knifeHand.name='knifeHoldingHand'}for(const grip of[grenadeGrip,grenadePull])if(!grip.userData.holdingForearm){limb(grip,[0,-.045,.055],[grip===grenadeGrip?.15:-.15,-.35,.30],.03,.052,sleeve);grip.userData.holdingForearm=true}
+ // Use the same anatomical hand for magazine swaps and shell loading.
+ if(reloadRig?.hand){while(reloadRig.hand.children.length)reloadRig.hand.remove(reloadRig.hand.children[0]);reloadRig.hand.scale.setScalar(1);anatomicalGrip(reloadRig.hand,{name:'reloadHoldingHand',side:-1,center:[0,0,0],halfWidth:.027,halfDepth:.036,angle:.12,elbow:[-.25,-.34,.28]})}
+ if(!knifeView.getObjectByName('knifeHoldingHand'))anatomicalGrip(knifeView,{name:'knifeHoldingHand',side:1,center:[0,-.088,.015],halfWidth:.033,halfDepth:.031});
+ for(const grip of[grenadeGrip,grenadePull])if(!grip.userData.holdingForearm){const a=new THREE.Vector3(0,-.045,.055),b=new THREE.Vector3(grip===grenadeGrip?.15:-.15,-.35,.30),v=b.clone().sub(a),mesh=part(new THREE.CylinderGeometry(.036,.065,v.length(),16),holdingMaterials.sleeve,...a.clone().add(b).multiplyScalar(.5).toArray(),1,1,1,grip);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());grip.userData.holdingForearm=true}
 }
 function updateWeaponHands(){const hands=gun.getObjectByName('weaponHands');if(!hands||!reloadRig)return;const support=gun.getObjectByName('supportHand');if(support)support.visible=!reloading;if(isDualPistol()&&reloading)reloadRig.hand.visible=false}
 
