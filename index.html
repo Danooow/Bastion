@@ -478,7 +478,7 @@ function getFantasyAssets(){
  const map=new THREE.CanvasTexture(texture);map.wrapS=map.wrapT=THREE.RepeatWrapping;map.anisotropy=4;
  const material=(color,roughness=.85,metalness=0,stone=false)=>new THREE.MeshStandardMaterial({color,roughness,metalness,...(stone?{map,bumpMap:map,bumpScale:.035}:{})});
  fantasyAssets={rock:new THREE.IcosahedronGeometry(1,1),facet:new THREE.DodecahedronGeometry(1,0),crystal:new THREE.ConeGeometry(1,1,5),sphere:new THREE.SphereGeometry(1,24,16),
-  skin:material(0x638d34),skinDark:material(0x3e642a),skinLight:material(0x7e9d48),troll:material(0x65715a,.98,0,true),trollDark:material(0x414e3c,.95,0,true),
+  skin:material(0x638d34),skinDark:material(0x3e642a),skinLight:material(0x7e9d48),troll:material(0xe0ceb0,.98,0,true),trollDark:material(0xbca582,.95,0,true),
   leather:material(0x493225),strap:material(0x735037),iron:material(0x61696b,.55,.65),blade:material(0xb0b9b3,.38,.65),ivory:material(0xd5ccb0),black:material(0x181e18),wood:material(0x513a24,.98,0,true),woodEnd:material(0x9b8155,.95,0,true),
   fur:material(0x515d65,.98,0,true),furDark:material(0x303a43,.98,0,true),furLight:material(0x87918d,.95),gold:material(0xffd249,.34,.8),
   wolfEye:new THREE.MeshStandardMaterial({color:0xff0909,emissive:0xff0000,emissiveIntensity:1.4,roughness:.3,toneMapped:false}),
@@ -488,10 +488,24 @@ function getFantasyAssets(){
    {stone:material(0x49454a,.9,.15,true),dark:material(0x201f23,.98,0,true),moss:material(0x9a4939,.9),crystal:material(0xff4c39,.25,.28)}]};
  for(const palette of fantasyAssets.golems){palette.crystal.emissive.copy(palette.crystal.color);palette.crystal.emissiveIntensity=.85}return fantasyAssets;
 }
-function makeFantasyEnemy(type='goblin',variant=0){
- const m=getFantasyAssets(),g=new THREE.Group(),b=new THREE.Group();g.name=type==='golem'?['AzureStoneGolem','AmethystStoneGolem','RubyStoneGolem'][variant]:type==='wolf'?'DireWolf':type==='troll'?'ClubTroll':'GreenGoblin';g.add(b);
+// Palettes are shared across enemies; each spawned model keeps its own outfit.
+const fantasySkinPalettes={};
+function enemySkinPalette(type,variant){
+ const base=getFantasyAssets(),key=type+variant;if(fantasySkinPalettes[key])return fantasySkinPalettes[key];
+ const palette={...base},colors={
+  goblin:[[0x638d34,0x3e642a,0x7e9d48,0x493225,0x735037],[0x879e42,0x536a29,0xa1b963,0x58392c,0xb08a53],[0x39754c,0x245438,0x60966a,0x273e59,0x7088a3],[0x91b85b,0x61833b,0xb3d580,0x622d3a,0xbb805a]],
+  troll:[[0xe0ceb0,0xbca582,0x493225,0x735037],[0xcbb18d,0x9f8362,0x344c52,0x8daca3],[0xf0dfc1,0xccb795,0x713e32,0xbb985b]],
+  wolf:[[0x515d65,0x303a43,0x87918d],[0x9c714c,0x503a2a,0xd2b68a],[0xe3e3d9,0x999e9c,0xfff5df]]
+ }[type][variant];
+ const keys=type==='goblin'?['skin','skinDark','skinLight','leather','strap']:type==='troll'?['troll','trollDark','leather','strap']:['fur','furDark','furLight'];
+ keys.forEach((key,i)=>{palette[key]=base[key].clone();palette[key].color.setHex(colors[i]);if(type==='goblin')palette[key].flatShading=true});
+ return fantasySkinPalettes[key]=palette;
+}
+function makeFantasyEnemy(type='goblin',variant=null){
+ if(variant===null)variant=type==='golem'?0:Math.floor(R()*(type==='goblin'?4:3));
+ const m=type==='golem'?getFantasyAssets():enemySkinPalette(type,variant),g=new THREE.Group(),b=new THREE.Group();g.userData.skinVariant=variant;g.name=type==='golem'?['AzureStoneGolem','AmethystStoneGolem','RubyStoneGolem'][variant]:type==='wolf'?'DireWolf':type==='troll'?'ClubTroll':'GreenGoblin';g.add(b);
  const knees=[],elbows=[],paws=[],head=new THREE.Group();head.name='enemyHead';head.userData.head=true;b.add(head);
- const mesh=(geo,mat,x,y,z,sx,sy,sz,parent=b)=>part(geo,mat,x,y,z,sx,sy,sz,parent),ball=(mat,x,y,z,sx,sy,sz,parent=b)=>mesh(m.sphere,mat,x,y,z,sx,sy,sz,parent),rock=(mat,x,y,z,sx,sy,sz,parent=b)=>mesh(m.rock,mat,x,y,z,sx,sy,sz,parent);
+ const mesh=(geo,mat,x,y,z,sx,sy,sz,parent=b)=>part(geo,mat,x,y,z,sx,sy,sz,parent),ball=(mat,x,y,z,sx,sy,sz,parent=b)=>mesh(type==='goblin'?m.facet:m.sphere,mat,x,y,z,sx,sy,sz,parent),rock=(mat,x,y,z,sx,sy,sz,parent=b)=>mesh(m.rock,mat,x,y,z,sx,sy,sz,parent);
  const joint=(name,parent,x,y,z)=>{const group=new THREE.Group();group.name=name;group.position.set(x,y,z);parent.add(group);return group};
  const taper=(mat,a,c,r1,r2,parent)=>{const start=new THREE.Vector3(...a),end=new THREE.Vector3(...c),v=end.clone().sub(start),o=mesh(new THREE.CylinderGeometry(r2,r1,v.length(),8),mat,...start.clone().add(end).multiplyScalar(.5).toArray(),1,1,1,parent);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());return o};
  const tooth=(parent,x,y,z,size,up=true)=>{const t=mesh(m.crystal,m.ivory,x,y,z,size*.3,size,size*.3,parent);if(!up)t.rotation.z=Math.PI;return t};
@@ -508,7 +522,7 @@ function makeFantasyEnemy(type='goblin',variant=0){
   tagRoot();return{g,b,lL:legs[0],lR:legs[1],aL:legs[2],aR:legs[3],off:0,hl:null,rig:{type,knees,elbows,paws,legs,tail,jaw,head}};
  }
  const isTroll=type==='troll',isGolem=type==='golem',p=isGolem?m.golems[variant]:null,skin=isGolem?p.stone:isTroll?m.troll:m.skin,dark=isGolem?p.dark:isTroll?m.trollDark:m.skinDark;
- const chunk=isGolem?rock:ball,width=isTroll?.63:isGolem?.66:.4;
+ const chunk=isGolem||type==='goblin'?rock:ball,width=isTroll?.63:isGolem?.66:.4;
  chunk(skin,0,1.23,0,width,.48,isTroll?.38:.29);chunk(dark,0,.86,0,width*.83,.23,.27);chunk(skin,0,1.53,.025,width*1.07,.25,.3);
  if(isTroll)ball(m.trollDark,0,1.12,.29,.47,.39,.18);
  if(!isGolem){mesh(gB,m.leather,0,.87,.015,width*1.85,.14,.57);mesh(gB,m.iron,0,.87,.315,.15,.12,.045);for(let i=-2;i<=2;i++){const rag=mesh(gB,i%2?m.strap:m.leather,i*width*.28,.69,.24,width*.3,.34+Math.abs(i)*.035,.06);rag.rotation.z=-i*.09}}
@@ -554,6 +568,12 @@ function makeFantasyEnemy(type='goblin',variant=0){
    for(const elbow of elbows){const blade=joint('goblinDagger',elbow,0,-.44,.11);taper(m.strap,[0,0,-.08],[0,0,.13],.045,.045,blade);mesh(gB,m.iron,0,0,.13,.24,.055,.045,blade);const shard=mesh(m.crystal,m.blade,0,0,.43,.09,.57,.035,blade);shard.rotation.x=Math.PI/2}
    mesh(gB,m.strap,0,1.24,.28,.1,.65,.035).rotation.z=.55;
   }
+ }
+ // Distinct silhouettes: hood and tunic, armored vest, or sash and kilt.
+ if(!isGolem&&variant>0){
+  if(variant===1){mesh(gB,m.leather,0,1.29,-.04,width*1.9,.65,.58);mesh(gB,m.strap,0,1.28,.29,.13,.63,.035);rock(m.leather,0,.18,-.16,.36,.3,.25,head)}
+  else if(variant===2){mesh(gB,m.leather,0,1.3,.265,width*1.7,.52,.10);for(const arm of arms)rock(m.iron,0,.06,0,isTroll?.31:.23,.13,.25,arm);mesh(gB,m.strap,0,.61,0,width*1.9,.44,.58)}
+  else{mesh(gB,m.leather,0,1.28,.29,.22,.78,.06).rotation.z=-.6;mesh(gB,m.leather,0,.65,0,width*2,.4,.6);mesh(gB,m.strap,0,.23,.01,.64,.12,.5,head)}
  }
  const torso=joint('upperBody',b,0,.88,0);for(const child of [...b.children])if(child!==torso&&!legs.includes(child)){child.position.y-=.88;torso.add(child)}
  const off=0;g.scale.setScalar(isTroll?2.3:1);tagRoot();return{g,b,lL:legs[0],lR:legs[1],aL:arms[0],aR:arms[1],off,hl:null,rig:{type,knees,elbows,head,torso}};
@@ -749,7 +769,7 @@ addEventListener('keydown',e=>{
 },true);
 addEventListener('keyup',e=>{if(e.key==='Escape'||e.code==='Escape'){escapeHeld=false;e.stopImmediatePropagation();if(relockAfterEscape){relockAfterEscape=false;if(state==='play')lock()}return}if(state==='console'){keys[e.code]=false;e.stopImmediatePropagation()}},true);
 
-const STAMINA_POTION_COSTS=[1500,2000,2500],STAMINA_DRAIN_REDUCTION=[0,.2,.3,.4];
+const STAMINA_POTION_COSTS=[1500,2000,2500],STAMINA_DRAIN_REDUCTION=[0,.05,.10,.15];
 const HEALTH_POTION_COSTS=[2500,3000,3500],RESURRECTION_COST=500;
 let staminaPotionLevel=0,healthPotionLevel=0,resurrectionReady=false,resurrectionPurchases=0,resurrectionTime=0,reviveGrace=0,playerEyeHeight=1.7;
 const POTION_ICONS={stamina:'<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="21" cy="5" r="3.5" fill="currentColor"/><path d="m18 11-5 7 6 5-1 7M13 18l-4 9H3M18 11l5 7 6-1M17 10l-7 1-4 6" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',health:'<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 28 4.5 16.8C-5 7.5 8-2 16 7.5 24-2 37 7.5 27.5 16.8Z"/></svg>',resurrection:'<svg viewBox="0 0 32 32" aria-hidden="true"><g transform="rotate(45 16 16)" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 3h12M16 3v6M9 9h14M11 9v13h10V9M16 22v8M12 14h4M12 18h4"/></g></svg>'};
@@ -764,7 +784,7 @@ function updateResurrectionHud(){$('staminaPotionHud').style.display=staminaPoti
 function beginResurrection(){if(!resurrectionReady||resurrectionTime>0)return false;resurrectionReady=false;resurrectionTime=10;healthPotionLevel=0;php=0;flying=false;vy=0;down=adsOn=false;ads=0;reloading=0;knifeTime=0;knifeView.visible=false;cancelGrenade();clearPlayerInput();$('ovShop').classList.remove('on');if(state==='shop')state='play';document.documentElement.classList.add('resurrecting');updateResurrectionHud();return true}
 function updateResurrection(dt){reviveGrace=Math.max(0,reviveGrace-dt);if(resurrectionTime>0){resurrectionTime=Math.max(0,resurrectionTime-dt);if(resurrectionTime<1e-7){resurrectionTime=0;php=playerMaxHp();reviveGrace=2;playerRegenWait=0;criticalHealth=false;document.documentElement.classList.remove('resurrecting')}}playerEyeHeight+=((resurrectionTime>0?.35:1.7)-playerEyeHeight)*Math.min(1,dt*8)}
 const CASTLE_MAX_HP=5000;
-let php=playerMaxHp(),state='menu',wave=0,gold=0,hp=CASTLE_MAX_HP,ammo=8,reloading=0,cd=0,down=false,yaw=0,pitch=0,px=0,py=6,pz=0,vy=0,grd=true,cyv=6,kick=0,shake=0,fl=0,hmv=0,flv=0,kills=0,spawnT=0,list=[];
+let php=playerMaxHp(),state='menu',wave=0,gold=500,hp=CASTLE_MAX_HP,ammo=8,reloading=0,cd=0,down=false,yaw=0,pitch=0,px=0,py=6,pz=0,vy=0,grd=true,cyv=6,kick=0,shake=0,fl=0,hmv=0,flv=0,kills=0,spawnT=0,list=[];
 // Five seconds of sprinting; eight seconds to refill an empty bar.
 const STAMINA_MAX=100,STAMINA_DRAIN=20,STAMINA_REGEN=12.5;
 let stamina=STAMINA_MAX,sprintExhausted=false,sprintNeedsPress=false,sprinting=false,sprintBlend=0,sprintPhase=0,hurtSlow=0;
@@ -782,7 +802,7 @@ function movementSpeed(dt,moving,locked){
  sprinting=!sprintNeedsPress&&resurrectionTime<=0&&state==='play'&&!locked&&moving&&(keys.ShiftLeft||keys.ShiftRight)&&stamina>0;
  if(sprinting&&!isGod()){stamina=Math.max(0,stamina-STAMINA_DRAIN*(1-STAMINA_DRAIN_REDUCTION[staminaPotionLevel])*dt);if(stamina<=0){sprintExhausted=true;sprintNeedsPress=true;sprinting=false}}
  else{stamina=Math.min(STAMINA_MAX,stamina+STAMINA_REGEN*dt);if(stamina>0)sprintExhausted=false}
- updateStaminaHud();return resurrectionTime>0?.25:(sprinting?1.5*(1+.05*staminaPotionLevel):1)*(hurtSlow>0&&pGnd()&&!onWall()?.7:1);
+ updateStaminaHud();return resurrectionTime>0?.25:(sprinting?1.5*(1+.10*staminaPotionLevel):1)*(hurtSlow>0&&pGnd()&&!onWall()?.7:1);
 }
 const keys={},lv={dmg:0,rate:0,reload:0,armor:0,loot:0};
 const U={dmg:{n:"Schade",d:"+5% schade per kogel per niveau",b:300,growth:1.5},rate:{n:"Vuursnelheid",d:"+5% vuursnelheid per niveau",b:250,growth:1.5},reload:{n:"Herlaadsnelheid",d:"+5% herlaadsnelheid per niveau",b:200,growth:1.5},armor:{n:"Kasteel upgraden",d:"6% minder schade · kasteel groeit en verandert",b:350,growth:1.5},loot:{n:"Buit",d:"+5% goud per kill per niveau",b:300,growth:1.5}};
@@ -846,8 +866,21 @@ function hideTri(g){for(const c of g.children)if(c.userData.tri)c.visible=false}
 const enemyHpGeometry=new THREE.PlaneGeometry(1,1),enemyHpRed=new THREE.MeshBasicMaterial({color:0xff3030,side:THREE.DoubleSide,fog:false,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}),enemyHpBack=new THREE.MeshBasicMaterial({color:0x260606,side:THREE.DoubleSide,fog:false,transparent:true,depthTest:false,depthWrite:false,toneMapped:false});
 const enemyAttackSpeed=()=>1+.012*Math.max(0,wave-1);
 const enemyFirstAttackDelay=()=>.1/enemyAttackSpeed();
+let goblinPaceWave=-1,goblinPaceCount=0;
+function goblinPace(round,index){
+ // Round one only shuffles. The faster share rises by 6% per round to 100%.
+ const progress=Math.max(0,round-1),share=Math.min(1,progress*.06);
+ const faster=Math.floor((index+1)*share+1e-9)>Math.floor(index*share+1e-9);
+ // Even an injured player walking without potions keeps a small speed advantage.
+ const cap=SPD*.7*.95;
+ return {gait:faster?(progress<8?'walk':'run'):'shuffle',speed:faster?Math.min(cap,2.8+progress*.18):Math.min(2.2,1.35+progress*.025)};
+}
 function configureEnemyCombat(e){
  e.moveSpeedMultiplier=e.boss?.7:.8;e.sp*=e.moveSpeedMultiplier;
+ if(e.o.rig?.type==='goblin'){
+  if(goblinPaceWave!==wave){goblinPaceWave=wave;goblinPaceCount=0}
+  const pace=goblinPace(wave,goblinPaceCount++);e.sp=pace.speed;e.pace=pace.gait;
+ }
  e.playerDmg=e.boss?10000:e.giant?100:(e.horse||e.normalSoldier)?50:e.gold?5.5:e.rng?e.dmg*.55:50;
  e.dmg=e.boss?10000:e.giant?100:(e.horse||e.normalSoldier)?50:e.dmg;
  e.atk=enemyFirstAttackDelay();e.pa=enemyFirstAttackDelay();
@@ -1170,7 +1203,7 @@ function renderShop(){$('gold2').textContent=goldText();const box=$('cards');box
   hd('Training');for(const k of[2,3,4]){const l=alv[k],c=Math.round(AU[k]*Math.pow(1.5,l));add(AL[k].n+' · Level '+l+'/10',(k==4?'+25% HP en +40% schade per niveau, voor alle bondgenoten van dit type':'+10 HP en +10% kracht per niveau, voor alle bondgenoten van dit type'),'●'.repeat(l)+'○'.repeat(10-l),l>=10?'Maximaal':'Upgrade · '+c+' goud',l>=10||gold<c,()=>{gold-=c;alv[k]++;for(const a of A)if(a.kind==k)allyStat(a)})}
   hd('Potions');const healthLocked=potionLevelLocked(healthPotionLevel),staminaLocked=potionLevelLocked(staminaPotionLevel);
  decoratePotion(add('Health ('+healthPotionLevel+'/3)','+50 maximale en huidige HP per niveau · niveau 2 vanaf ronde 10, niveau 3 vanaf ronde 20','',healthPotionLevel>=3?'Maximaal (3)':healthLocked?'Ronde '+potionRequiredWave(healthPotionLevel):'Koop · '+HEALTH_POTION_COSTS[healthPotionLevel]+' goud',healthPotionLevel>=3||healthLocked||gold<HEALTH_POTION_COSTS[healthPotionLevel]||resurrectionTime>0,buyHealthPotion),'health');
- decoratePotion(add('Stamina ('+staminaPotionLevel+'/3)','20% / 30% / 40% minder staminaverbruik en +5% sprintsnelheid per level · niveau 2 vanaf ronde 10, niveau 3 vanaf ronde 20','',staminaPotionLevel>=3?'Maximaal (3)':staminaLocked?'Ronde '+potionRequiredWave(staminaPotionLevel):'Koop · '+STAMINA_POTION_COSTS[staminaPotionLevel]+' goud',staminaPotionLevel>=3||staminaLocked||gold<STAMINA_POTION_COSTS[staminaPotionLevel]||resurrectionTime>0,buyStaminaPotion),'stamina');
+ decoratePotion(add('Stamina ('+staminaPotionLevel+'/3)','5% minder staminaverbruik en +10% sprintsnelheid per aankoop · niveau 2 vanaf ronde 10, niveau 3 vanaf ronde 20','',staminaPotionLevel>=3?'Maximaal (3)':staminaLocked?'Ronde '+potionRequiredWave(staminaPotionLevel):'Koop · '+STAMINA_POTION_COSTS[staminaPotionLevel]+' goud',staminaPotionLevel>=3||staminaLocked||gold<STAMINA_POTION_COSTS[staminaPotionLevel]||resurrectionTime>0,buyStaminaPotion),'stamina');
  decoratePotion(add('Resurrection','Kruip en schiet gedurende 10 seconden, daarna herleef je · Health-niveaus vervallen · '+resurrectionPurchases+'/3 aankopen'+(resurrectionReady?' · actief':''),'',resurrectionPurchases>=3?'Uitverkocht':resurrectionReady?'Actief':'Koop · '+RESURRECTION_COST+' goud',resurrectionPurchases>=3||resurrectionReady||resurrectionTime>0||gold<RESURRECTION_COST,buyResurrectionPotion),'resurrection');
   specialShop(hd,add);hd('Overig');add('Granaat ('+gren+'/'+GRENADE_MAX+')','Gooi met G · ontploft na ±1,5 s · groot bereik · 450 schade','',gren>=GRENADE_MAX?'Maximaal ('+GRENADE_MAX+')':'Koop · 45 goud',gren>=GRENADE_MAX||gold<45,()=>{gold-=45;gren++})
  const repairCard=add('Kasteel repareren','Herstel 500 HP, tot maximaal '+CASTLE_MAX_HP+' HP','','Repareren · 250 goud',gold<250||hp>=CASTLE_MAX_HP,()=>{if(gold<250||hp>=CASTLE_MAX_HP)return;gold-=250;hp=Math.min(CASTLE_MAX_HP,hp+500)});const repairHp=document.createElement('span');repairHp.style.color='var(--acc)';repairHp.textContent=Math.ceil(hp)+' / '+CASTLE_MAX_HP+' HP';repairCard.querySelector('.cardTitle').after(repairHp);fitShop()}
@@ -1244,7 +1277,7 @@ function specialShop(hd,add){const nx=wave,cn=k=>A.filter(a=>a.kind==k&&a.state!
  else {const capped=normalRules()&&(shStock>=1||shOn),waiting=normalRules()&&wave<shNextBuyWave;
  add('Schildbel (voorraad '+shStock+')','Plaats met B · beschermt je basis 30 s · normale modus: max. 1 op voorraad en na gebruik 3 golven wachten','',capped?'Al in voorraad of actief':waiting?'Wacht nog '+(shNextBuyWave-wave)+' golven':'Koop · 750 goud',gold<750||capped||waiting,()=>{if(gold<750||(normalRules()&&(shStock>=1||shOn||wave<shNextBuyWave)))return;gold-=750;shStock++})}}
 
-function resetGame(){clearBossDebris();dragonSpawnedThisWave=0;setDualPistolAmmo(16);dualLastHand=1;dualCooldowns.fill(0);dualFlashTimes.fill(0);dualRecoil.fill(0);dualRightDown=false;staminaPotionLevel=0;healthPotionLevel=0;resurrectionReady=false;resurrectionPurchases=0;resurrectionTime=reviveGrace=0;playerEyeHeight=1.7;escapeHeld=relockAfterEscape=false;document.documentElement.classList.remove('resurrecting');updateResurrectionHud();waveBreakTime=0;clearTimeout(powerupNoticeTimer);$('powerupNotice').style.opacity=0;$('armoryPrompt').style.display='none';$('ovShop').classList.remove('on');lastWaveReward=lastWaveStarterReward=0;sandboxRestrictions=false;sandboxRestrictedGold=0;enemyRouteSerial=0;cancelGrenade();for(const g of GR)scene.remove(g.m);GR.length=0;knifeTime=0;knifeHit=false;knifeView.visible=false;criticalHealth=false;heartbeatTime=0;clearShieldPowerups();flying=false;lastSpaceTap=-Infinity;for(const k in cheats)cheats[k]=false;$('commandConsole').classList.remove('open');$('commandOutput').textContent='';sandboxMode=false;resetMovement();suspendedState=null;updateContinueButton();for(const e of E)scene.remove(e.g);E.length=0;for(const a of A){scene.remove(a.g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}}A.length=0;shStock=0;shNextBuyWave=0;clearFireballs();shOn=0;shM.visible=shW.visible=false;for(const b of B)scene.remove(b.m);B.length=0;for(const p of P)scene.remove(p.m);P.length=0;for(const d of D)scene.remove(d.m);D.length=0;wave=0;gold=0;hp=CASTLE_MAX_HP;php=playerMaxHp();playerRegenWait=0;kills=0;for(const k in lv)lv[k]=0;gren=GRENADE_MAX;streak=0;streakT=0;for(const k in alv)alv[k]=0;for(const k in owned)delete owned[k];for(const k in wup)delete wup[k];upg.on=0;px=0;py=6;pz=0;vy=0;grd=true;cyv=6;owned.pistol=1;cur='pistol';buildGun('pistol');initAmmo();castleUp();applyEra()}
+function resetGame(){clearBossDebris();dragonSpawnedThisWave=0;setDualPistolAmmo(16);dualLastHand=1;dualCooldowns.fill(0);dualFlashTimes.fill(0);dualRecoil.fill(0);dualRightDown=false;staminaPotionLevel=0;healthPotionLevel=0;resurrectionReady=false;resurrectionPurchases=0;resurrectionTime=reviveGrace=0;playerEyeHeight=1.7;escapeHeld=relockAfterEscape=false;document.documentElement.classList.remove('resurrecting');updateResurrectionHud();waveBreakTime=0;clearTimeout(powerupNoticeTimer);$('powerupNotice').style.opacity=0;$('armoryPrompt').style.display='none';$('ovShop').classList.remove('on');lastWaveReward=lastWaveStarterReward=0;sandboxRestrictions=false;sandboxRestrictedGold=0;enemyRouteSerial=0;goblinPaceWave=-1;goblinPaceCount=0;cancelGrenade();for(const g of GR)scene.remove(g.m);GR.length=0;knifeTime=0;knifeHit=false;knifeView.visible=false;criticalHealth=false;heartbeatTime=0;clearShieldPowerups();flying=false;lastSpaceTap=-Infinity;for(const k in cheats)cheats[k]=false;$('commandConsole').classList.remove('open');$('commandOutput').textContent='';sandboxMode=false;resetMovement();suspendedState=null;updateContinueButton();for(const e of E)scene.remove(e.g);E.length=0;for(const a of A){scene.remove(a.g);if(a.obs){const j=OBS.indexOf(a.obs);if(j>=0)OBS.splice(j,1)}}A.length=0;shStock=0;shNextBuyWave=0;clearFireballs();shOn=0;shM.visible=shW.visible=false;for(const b of B)scene.remove(b.m);B.length=0;for(const p of P)scene.remove(p.m);P.length=0;for(const d of D)scene.remove(d.m);D.length=0;wave=0;gold=500;hp=CASTLE_MAX_HP;php=playerMaxHp();playerRegenWait=0;kills=0;for(const k in lv)lv[k]=0;gren=GRENADE_MAX;streak=0;streakT=0;for(const k in alv)alv[k]=0;for(const k in owned)delete owned[k];for(const k in wup)delete wup[k];upg.on=0;px=0;py=6;pz=0;vy=0;grd=true;cyv=6;owned.pistol=1;cur='pistol';buildGun('pistol');initAmmo();castleUp();applyEra()}
 $('again').onclick=()=>{resetGame();begin()};
 addEventListener('mousemove',e=>{if(state!='play'||document.pointerLockElement!==ren.domElement)return;yaw-=e.movementX*.0022*set.sens*cam.fov/baseFov;pitch=Math.max(-1.4,Math.min(1.2,pitch-e.movementY*.0022*set.sens*cam.fov/baseFov))});
 ren.domElement.addEventListener('mousedown',e=>{if(state!=='play')return;if(e.button===0)down=true;if(e.button===2){if(isDualPistol()){dualRightDown=true;adsOn=false}else adsOn=true}if((e.button===0||e.button===2)&&!document.pointerLockElement)lock()});
